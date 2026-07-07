@@ -1,0 +1,522 @@
+<script setup>
+import { RouterView } from 'vue-router'
+import GoTopButton from './components/GoTopButton.vue'
+import SiteFooter from './components/SiteFooter.vue'
+import SiteHeader from './components/SiteHeader.vue'
+</script>
+
+<template>
+  <SiteHeader />
+  <main>
+    <RouterView />
+  </main>
+  <SiteFooter />
+  <GoTopButton />
+</template>
+
+<style>
+:root {
+  color: #f5f5f0;
+  background: #090909;
+  font-family:
+    Inter, 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --color-bg: #090909;
+  --color-panel: #121212;
+  --color-panel-soft: #181818;
+  --color-line: rgba(255, 255, 255, 0.11);
+  --color-line-soft: rgba(255, 255, 255, 0.07);
+  --color-text: #f7f7f2;
+  --color-muted: #b7b7ad;
+  --color-accent: #ff5a12;
+  --color-accent-2: #ef493d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(ellipse at 80% -8%, rgba(255, 90, 18, 0.2), transparent 34rem),
+    radial-gradient(ellipse at 6% 42%, rgba(168, 49, 19, 0.18), transparent 36rem),
+    radial-gradient(ellipse at 56% 108%, rgba(255, 90, 18, 0.16), transparent 42rem),
+    linear-gradient(150deg, #150b08 0%, #090807 34%, #050505 68%, #120806 100%);
+  background-attachment: fixed;
+}
+
+body::before,
+body::after {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: '';
+}
+
+body::before {
+  background:
+    linear-gradient(115deg, transparent 0%, rgba(255, 255, 255, 0.035) 46%, transparent 63%),
+    radial-gradient(ellipse at 50% 28%, transparent 0 42%, rgba(0, 0, 0, 0.42) 100%);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+}
+
+body::after {
+  background:
+    repeating-radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 5px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(0, 0, 0, 0.18));
+  opacity: 0.22;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+.eyebrow {
+  display: block;
+  margin: 0 0 14px;
+  color: #ff5a12;
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-align: left;
+  text-transform: uppercase;
+}
+</style>
+
+<style scoped>
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px clamp(20px, 5vw, 72px);
+  border-bottom: 1px solid var(--color-line);
+  background: rgba(8, 8, 8, 0.86);
+  backdrop-filter: blur(16px);
+}
+
+:deep(.brand) {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 10px;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+:deep(.brand-mark) {
+  color: var(--color-accent);
+  font-size: 1.35rem;
+  font-style: italic;
+  font-weight: 950;
+}
+
+:deep(.brand-name) {
+  color: #f8f8f4;
+}
+
+:deep(nav) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+:deep(nav a) {
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  color: #c9c9c2;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+:deep(nav a.router-link-active),
+:deep(nav a:hover) {
+  border-color: rgba(255, 90, 18, 0.42);
+  color: #fff;
+  background: rgba(255, 90, 18, 0.08);
+}
+
+main {
+  min-height: 70vh;
+}
+
+.site-footer {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(260px, 1.25fr) minmax(240px, 1fr);
+  align-items: start;
+  gap: 24px;
+  overflow: hidden;
+  padding: 54px clamp(20px, 5vw, 72px) 42px;
+  border-top: 1px solid var(--color-line);
+  color: #f8f8f4;
+  background:
+    radial-gradient(ellipse at 48% 118%, rgba(255, 90, 18, 0.2), transparent 34rem),
+    radial-gradient(ellipse at 92% 0%, rgba(144, 40, 16, 0.18), transparent 28rem),
+    linear-gradient(145deg, rgba(18, 9, 6, 0.92), rgba(5, 5, 5, 0.96));
+}
+
+:deep(.footer-watermark) {
+  position: absolute;
+  right: clamp(16px, 5vw, 72px);
+  bottom: -20px;
+  z-index: 0;
+  color: rgba(255, 255, 255, 0.055);
+  font-size: clamp(4.5rem, 14vw, 12rem);
+  font-style: italic;
+  font-weight: 950;
+  line-height: 0.8;
+  pointer-events: none;
+}
+
+:deep(.footer-brand),
+:deep(.footer-contact),
+:deep(.footer-services),
+:deep(.footer-link) {
+  position: relative;
+  z-index: 1;
+}
+
+:deep(.site-footer p),
+:deep(.site-footer address) {
+  margin: 0;
+}
+
+:deep(.footer-logo) {
+  color: var(--color-accent);
+  font-size: 1.7rem;
+  font-style: italic;
+  font-weight: 950;
+}
+
+:deep(.footer-brand) {
+  display: grid;
+  gap: 6px;
+  grid-column: 2;
+  justify-items: center;
+  justify-self: center;
+  text-align: center;
+}
+
+:deep(.footer-contact) {
+  display: grid;
+  grid-column: 3;
+  gap: 6px;
+  justify-self: end;
+  color: #d6d6ce;
+  font-style: normal;
+  line-height: 1.6;
+  text-align: right;
+}
+
+:deep(.footer-services) {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  gap: 10px 8px;
+  align-items: flex-start;
+  justify-self: start;
+  text-align: left;
+}
+
+:deep(.footer-services span) {
+  padding: 7px 10px;
+  border: 1px solid var(--color-line);
+  color: #ecece6;
+  background: rgba(255, 255, 255, 0.035);
+  font-weight: 800;
+}
+
+:deep(.footer-services span:last-child) {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  text-align: center;
+}
+
+:deep(.site-footer a) {
+  font-weight: 900;
+}
+
+:deep(.footer-link) {
+  color: var(--color-accent);
+}
+
+:deep(.hero-section),
+:deep(.page-hero),
+:deep(.section) {
+  padding-inline: clamp(20px, 5vw, 72px);
+}
+
+:deep(.page-hero) {
+  max-width: 900px;
+  padding-block: 84px 48px;
+}
+
+:deep(.page-hero h1) {
+  max-width: 840px;
+  margin: 0;
+  color: #fff;
+  font-size: clamp(2.5rem, 7vw, 5.75rem);
+  line-height: 1.02;
+}
+
+:deep(.page-hero p),
+:deep(.section p) {
+  max-width: 720px;
+  color: var(--color-muted);
+  font-size: 1.3rem;
+  line-height: 2; 
+}
+
+:deep(.eyebrow),
+:deep(.page-hero .eyebrow),
+:deep(.section .eyebrow) {
+  display: block;
+  margin: 0 0 14px;
+  color: #ff5a12;
+  font-size: 1.3rem;
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+:deep(.section) {
+  padding-block: 76px;
+}
+
+:deep(.section-heading) {
+  margin-bottom: 30px;
+}
+
+:deep(.section h2) {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+  line-height: 1.05;
+}
+
+:deep(.card-grid) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--color-line);
+  border-left: 1px solid var(--color-line);
+}
+
+:deep(.service-card),
+:deep(.faq-item),
+:deep(.placeholder-panel) {
+  border-right: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  padding: 24px;
+  color: #f8f8f4;
+  background:
+    linear-gradient(135deg, rgba(255, 90, 18, 0.08), transparent 42%),
+    var(--color-panel);
+}
+
+:deep(.service-card h3),
+:deep(.faq-item h2),
+:deep(.placeholder-panel h2) {
+  margin-top: 0;
+}
+
+:deep(.muted-section) {
+  border-block: 1px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+:deep(.primary-link),
+:deep(.text-link),
+:deep(.secondary-link) {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  width: fit-content;
+  margin-top: 20px;
+  padding: 12px 48px 12px 18px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 950;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+:deep(.primary-link),
+:deep(.text-link) {
+  border: 1px solid rgba(255, 90, 18, 0.72);
+  color: #fff;
+  background: linear-gradient(180deg, #ff6a18, #f04a0a);
+  box-shadow: 0 0 28px rgba(255, 90, 18, 0.22);
+}
+
+:deep(.secondary-link) {
+  border: 1px solid var(--color-line);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.055);
+}
+
+:deep(.primary-link::after),
+:deep(.text-link::after),
+:deep(.secondary-link::after) {
+  position: absolute;
+  right: 8px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.24);
+  content: '↗';
+  font-size: 0.85rem;
+}
+
+:deep(.primary-link:hover),
+:deep(.text-link:hover),
+:deep(.secondary-link:hover) {
+  transform: translateY(-1px);
+}
+
+:deep(.process-list) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0;
+  padding: 0;
+  border-top: 1px solid var(--color-line);
+  border-left: 1px solid var(--color-line);
+  list-style: none;
+}
+
+:deep(.process-list li) {
+  display: grid;
+  gap: 20px;
+  min-height: 160px;
+  padding: 24px;
+  border-right: 1px solid var(--color-line);
+  border-bottom: 1px solid var(--color-line);
+  background: var(--color-panel);
+}
+
+:deep(.process-list span) {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--color-accent);
+  font-weight: 950;
+}
+
+:deep(.category-list) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+:deep(.category-list span) {
+  padding: 8px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  color: #f8f8f4;
+  background: var(--color-panel);
+  font-weight: 800;
+}
+
+:deep(.story-layout),
+:deep(.contact-layout) {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+}
+
+:deep(.faq-list) {
+  display: grid;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .site-footer {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  :deep(.footer-services) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  :deep(.footer-brand) {
+    grid-column: 2;
+  }
+
+  :deep(.footer-contact) {
+    grid-column: 1 / -1;
+    justify-self: end;
+    text-align: right;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header,
+  .site-footer {
+    align-items: flex-start;
+    grid-template-columns: 1fr;
+  }
+
+  .site-header {
+    flex-direction: column;
+  }
+
+  :deep(nav) {
+    justify-content: flex-start;
+  }
+
+  :deep(.footer-contact),
+  :deep(.footer-services),
+  :deep(.footer-brand),
+  :deep(.footer-link) {
+    grid-column: auto;
+  }
+
+  :deep(.footer-services) {
+    justify-self: start;
+    text-align: left;
+  }
+
+  :deep(.footer-brand) {
+    justify-self: center;
+    text-align: center;
+  }
+
+  :deep(.footer-contact) {
+    justify-self: end;
+    text-align: right;
+  }
+}
+</style>
