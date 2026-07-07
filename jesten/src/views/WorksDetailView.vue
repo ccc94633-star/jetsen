@@ -20,7 +20,7 @@ const createDragScroll = (trackRef, draggingRef) => {
   const start = (event) => {
     const track = trackRef.value
 
-    if (!track || (event.pointerType === 'mouse' && event.button !== 0)) return
+    if (!track || event.pointerType !== 'mouse' || event.button !== 0) return
 
     drag.pointerId = event.pointerId
     drag.startX = event.clientX
@@ -53,6 +53,73 @@ const createDragScroll = (trackRef, draggingRef) => {
 }
 
 const scopeDrag = createDragScroll(scopeTrack, isScopeDragging)
+
+const scopeCardEls = ref([])
+
+const setScopeCardRef = (el, index) => {
+  scopeCardEls.value[index] = el
+}
+
+const createViewportHighlight = (trackRef, cardEls, hoveredRef, query) => {
+  const ratios = new Map()
+  let observer = null
+
+  const pickActive = () => {
+    let bestIndex = null
+    let bestRatio = 0
+
+    ratios.forEach((ratio, index) => {
+      if (ratio > bestRatio) {
+        bestRatio = ratio
+        bestIndex = index
+      }
+    })
+
+    hoveredRef.value = bestIndex
+  }
+
+  const disconnect = () => {
+    observer?.disconnect()
+    observer = null
+    ratios.clear()
+  }
+
+  const refresh = () => {
+    disconnect()
+
+    const track = trackRef.value
+
+    if (!track || !window.matchMedia(query).matches) {
+      hoveredRef.value = null
+      return
+    }
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          ratios.set(Number(entry.target.dataset.viewportIndex), entry.intersectionRatio)
+        })
+        pickActive()
+      },
+      { root: track, threshold: [0, 0.25, 0.5, 0.6, 0.75, 1] },
+    )
+
+    cardEls.value.forEach((el, index) => {
+      if (!el) return
+      el.dataset.viewportIndex = index
+      observer.observe(el)
+    })
+  }
+
+  return { refresh, disconnect }
+}
+
+const scopeViewportHighlight = createViewportHighlight(
+  scopeTrack,
+  scopeCardEls,
+  hoveredServiceIndex,
+  '(max-width: 900px)',
+)
 
 const relatedTrack = ref(null)
 const relatedPage = ref(0)
@@ -160,11 +227,16 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   window.addEventListener('resize', updateRelatedPagination)
   nextTick(updateRelatedPagination)
+
+  scopeViewportHighlight.refresh()
+  window.addEventListener('resize', scopeViewportHighlight.refresh)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('resize', updateRelatedPagination)
+  window.removeEventListener('resize', scopeViewportHighlight.refresh)
+  scopeViewportHighlight.disconnect()
   document.body.style.overflow = ''
 })
 </script>
@@ -879,8 +951,8 @@ onBeforeUnmount(() => {
   top: 42%;
   z-index: 3;
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   place-items: center;
   border: 1px solid var(--color-accent);
   border-radius: 0;
@@ -913,7 +985,7 @@ onBeforeUnmount(() => {
 .related-nav span {
   display: block;
   margin-top: -2px;
-  font-size: 1.6rem;
+  font-size: 1.28rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -1007,7 +1079,6 @@ onBeforeUnmount(() => {
     cursor: grab;
     scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
     scrollbar-width: thin;
-    touch-action: pan-y;
     user-select: none;
   }
 
@@ -1039,8 +1110,8 @@ onBeforeUnmount(() => {
 
   .related-nav {
     top: 38%;
-    width: 38px;
-    height: 38px;
+    width: 30.4px;
+    height: 30.4px;
   }
 
   .related-nav--prev {

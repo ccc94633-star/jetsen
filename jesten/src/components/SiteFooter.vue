@@ -20,9 +20,11 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
 
     <address class="footer-contact">
       <span>陳凱翔</span>
-      <a href="tel:0981185728">0981-185728</a>
-      <span>傳真：04 2277-7868</span>
       <span>台中市太平區長龍路二段626號</span>
+      <div class="footer-phonefax">
+        <a href="tel:0981185728">電話：0981-185728</a>
+        <span>傳真：04-2277-7868</span>
+      </div>
     </address>
 
 
@@ -99,6 +101,14 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   font-style: normal;
   line-height: 1.6;
   text-align: right;
+}
+
+.footer-phonefax {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-self: end;
+  text-align: left;
 }
 
 .footer-services {
@@ -249,25 +259,21 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     text-align: left;
   }
 
-  .footer-contact span:nth-child(3),
-  .footer-contact span:nth-child(4) {
+  .footer-contact :nth-child(3) {
     grid-column: 2;
-    text-align: right;
+    grid-row: 1 / span 2;
   }
 
-  .footer-contact span:nth-child(3) {
-    grid-row: 1;
-  }
-
-  .footer-contact span:nth-child(4) {
-    grid-row: 2;
+  .footer-contact span:nth-child(2),
+  .footer-phonefax span {
+    font-size: clamp(0.75rem, 2.6vw, 1.3rem);
+    white-space: nowrap;
   }
 
   .footer-contact a {
-    width: max-content;
     color: #fff;
-    text-decoration: underline;
-    text-underline-offset: 4px;
+    font-weight: 400;
+    text-decoration: none;
   }
 }
 </style>

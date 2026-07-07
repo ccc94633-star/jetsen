@@ -28,6 +28,9 @@ const contactDetails = [
 ]
 
 const requirements = ['施工項目', '現場照片', '大約尺寸', '施工地點', '希望完工時間']
+const hoveredContactIndex = ref(null)
+const selectedContactIndex = ref(null)
+const activeContactIndex = computed(() => hoveredContactIndex.value ?? selectedContactIndex.value ?? 0)
 const phoneHref = 'tel:0981185728'
 const lineHref = 'https://line.me/R/ti/p/@jetsen'
 const mapQuery = '杰森鐵作 台中市太平區長龍路二段626號'
@@ -139,7 +142,17 @@ const faqs = [
     </div>
 
     <div class="contact-info-strip" aria-label="聯絡資訊">
-      <div v-for="[label, value] in contactDetails" :key="label">
+      <div
+        v-for="([label, value], index) in contactDetails"
+        :key="label"
+        :class="{ 'is-active': index === activeContactIndex }"
+        tabindex="0"
+        @mouseenter="hoveredContactIndex = index"
+        @mouseleave="hoveredContactIndex = null"
+        @click="selectedContactIndex = index"
+        @focus="hoveredContactIndex = index"
+        @blur="hoveredContactIndex = null"
+      >
         <span>{{ label }}</span>
         <strong>{{ value }}</strong>
       </div>
@@ -391,7 +404,7 @@ const faqs = [
 }
 
 .faq-item-row summary strong {
-  font-size: clamp(0.8rem, 1.44vw, 1.04rem);
+  font-size: clamp(0.96rem, 1.728vw, 1.248rem);
   font-weight: 900;
   line-height: 1.35;
 }
@@ -400,7 +413,7 @@ const faqs = [
   max-width: 760px;
   margin: -3px 62px 21px;
   color: #deded4;
-  font-size: 0.8rem;
+  font-size: 0.96rem;
   line-height: 1.8;
 }
 
@@ -458,13 +471,13 @@ const faqs = [
   border-radius: 8px;
   background: #111;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.42);
+  cursor: pointer;
   transition:
     background 0.25s ease,
     border-color 0.25s ease;
 }
 
-.contact-info-strip:not(:hover) div:nth-child(1),
-.contact-info-strip div:hover {
+.contact-info-strip div.is-active {
   border-color: rgba(255, 92, 18, 0.72);
   background:
     radial-gradient(circle at 69% 48%, rgba(255, 112, 28, 0.22), transparent 34%),

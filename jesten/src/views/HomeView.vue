@@ -49,7 +49,7 @@ const createDragScroll = (trackRef, draggingRef) => {
   const start = (event) => {
     const track = trackRef.value
 
-    if (!track || (event.pointerType === 'mouse' && event.button !== 0)) return
+    if (!track || event.pointerType !== 'mouse' || event.button !== 0) return
 
     drag.pointerId = event.pointerId
     drag.startX = event.clientX
@@ -83,6 +83,83 @@ const createDragScroll = (trackRef, draggingRef) => {
 
 const serviceDrag = createDragScroll(serviceTrack, isServiceDragging)
 const processDrag = createDragScroll(processTrack, isProcessDragging)
+
+const serviceCardEls = ref([])
+const processCardEls = ref([])
+const hoveredServiceCardIndex = ref(null)
+const selectedServiceCardIndex = ref(null)
+const activeServiceCardIndex = computed(
+  () => hoveredServiceCardIndex.value ?? selectedServiceCardIndex.value ?? null,
+)
+
+const setServiceCardRef = (el, index) => {
+  serviceCardEls.value[index] = el
+}
+
+const setProcessCardRef = (el, index) => {
+  processCardEls.value[index] = el
+}
+
+const createViewportHighlight = (trackRef, cardEls, hoveredRef, query) => {
+  const ratios = new Map()
+  let observer = null
+
+  const pickActive = () => {
+    let bestIndex = null
+    let bestRatio = 0
+
+    ratios.forEach((ratio, index) => {
+      if (ratio > bestRatio) {
+        bestRatio = ratio
+        bestIndex = index
+      }
+    })
+
+    hoveredRef.value = bestIndex
+  }
+
+  const disconnect = () => {
+    observer?.disconnect()
+    observer = null
+    ratios.clear()
+  }
+
+  const refresh = () => {
+    disconnect()
+
+    const track = trackRef.value
+
+    if (!track || !window.matchMedia(query).matches) {
+      hoveredRef.value = null
+      return
+    }
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          ratios.set(Number(entry.target.dataset.viewportIndex), entry.intersectionRatio)
+        })
+        pickActive()
+      },
+      { root: track, threshold: [0, 0.25, 0.5, 0.6, 0.75, 1] },
+    )
+
+    cardEls.value.forEach((el, index) => {
+      if (!el) return
+      el.dataset.viewportIndex = index
+      observer.observe(el)
+    })
+  }
+
+  return { refresh, disconnect }
+}
+
+const serviceViewportHighlight = createViewportHighlight(
+  serviceTrack,
+  serviceCardEls,
+  hoveredServiceCardIndex,
+  '(max-width: 980px)',
+)
 
 const getProjectStep = (track) => {
   const isMobile = window.matchMedia('(max-width: 720px)').matches
@@ -137,14 +214,17 @@ const goToProjectPage = (index) => {
   })
 }
 
-onMounted(() => {
-  updateProjectPagination()
-  window.addEventListener('resize', updateProjectPagination)
-})
+const projectCardRefs = ref([])
 
-onUnmounted(() => {
-  window.removeEventListener('resize', updateProjectPagination)
-})
+const setProjectCardRef = (el, index) => {
+  projectCardRefs.value[index] = el?.$el ?? el ?? null
+}
+
+const scrollToCategory = (index) => {
+  const card = projectCardRefs.value[index]
+
+  card?.scrollIntoView({ behavior: 'smooth', inline: 'start', block: 'nearest' })
+}
 
 const processSteps = [
   {
@@ -174,6 +254,31 @@ const hoveredProcessIndex = ref(null)
 const activeProcessIndex = computed(
   () => hoveredProcessIndex.value ?? selectedProcessIndex.value ?? 0,
 )
+
+const processViewportHighlight = createViewportHighlight(
+  processTrack,
+  processCardEls,
+  hoveredProcessIndex,
+  '(max-width: 980px)',
+)
+
+onMounted(() => {
+  updateProjectPagination()
+  window.addEventListener('resize', updateProjectPagination)
+
+  serviceViewportHighlight.refresh()
+  processViewportHighlight.refresh()
+  window.addEventListener('resize', serviceViewportHighlight.refresh)
+  window.addEventListener('resize', processViewportHighlight.refresh)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateProjectPagination)
+  window.removeEventListener('resize', serviceViewportHighlight.refresh)
+  window.removeEventListener('resize', processViewportHighlight.refresh)
+  serviceViewportHighlight.disconnect()
+  processViewportHighlight.disconnect()
+})
 </script>
 
 <template>
@@ -211,8 +316,10 @@ const activeProcessIndex = computed(
       @pointercancel="serviceDrag.stop"
       @lostpointercapture="serviceDrag.stop"
     >
-      <article v-for="service in serviceCards" :key="service.title" class="hero-service-card"
-        :class="`hero-service-card--${service.tone}`" tabindex="0">
+      <article v-for="(service, index) in serviceCards" :key="service.title" class="hero-service-card"
+        :class="[`hero-service-card--${service.tone}`, { 'hero-service-card--active': activeServiceCardIndex === index }]"
+        :ref="(el) => setServiceCardRef(el, index)" tabindex="0"
+        @click="selectedServiceCardIndex = index">
         <span>{{ service.number }}</span>
         <h2>{{ service.title }}</h2>
         <p>{{ service.description }}</p>
@@ -238,11 +345,12 @@ const activeProcessIndex = computed(
     <div class="works-toolbar">
       <div>
         <p class="eyebrow">Gallery</p>
-        <h2>作品分類</h2>
+        <h2>杰森作品</h2>
       </div>
       <RouterLink class="text-link" to="/works">前往作品頁</RouterLink>
       <div class="category-pills" aria-label="Works categories">
-        <span v-for="category in workCategories" :key="category.title">{{ category.title }}</span>
+        <button v-for="(category, index) in workCategories" :key="category.title" type="button"
+          @click="scrollToCategory(index)">{{ category.title }}</button>
       </div>
     </div>
 
@@ -251,7 +359,8 @@ const activeProcessIndex = computed(
         <span aria-hidden="true">‹</span>
       </button>
       <div ref="projectTrack" class="project-grid" @scroll="updateProjectPagination">
-        <RouterLink v-for="category in workCategories" :key="category.slug" class="project-card"
+        <RouterLink v-for="(category, index) in workCategories" :key="category.slug" class="project-card"
+          :ref="(el) => setProjectCardRef(el, index)"
           :to="{ name: 'works-detail', params: { slug: category.slug } }" :aria-label="`查看${category.title}作品`">
           <img :src="category.coverImage" :alt="`${category.title}工程作品`" loading="lazy" />
           <div>
@@ -305,6 +414,7 @@ const activeProcessIndex = computed(
         :key="step.title"
         class="process-card"
         :class="{ 'process-card--active': activeProcessIndex === index }"
+        :ref="(el) => setProcessCardRef(el, index)"
         tabindex="0"
         @mouseenter="hoveredProcessIndex = index"
         @mouseleave="hoveredProcessIndex = null"
@@ -497,7 +607,8 @@ const activeProcessIndex = computed(
 }
 
 .hero-service-card:hover,
-.hero-service-card:focus-visible {
+.hero-service-card:focus-visible,
+.hero-service-card--active {
   z-index: 2;
   flex-grow: 1.82;
   transform: translateY(-6px);
@@ -505,7 +616,8 @@ const activeProcessIndex = computed(
 }
 
 .hero-service-card:hover::before,
-.hero-service-card:focus-visible::before {
+.hero-service-card:focus-visible::before,
+.hero-service-card--active::before {
   opacity: 1;
 }
 
@@ -539,7 +651,8 @@ const activeProcessIndex = computed(
 }
 
 .hero-service-card:hover p,
-.hero-service-card:focus-visible p {
+.hero-service-card:focus-visible p,
+.hero-service-card--active p {
   opacity: 0.82;
   transform: translateY(0);
 }
@@ -667,25 +780,33 @@ const activeProcessIndex = computed(
   gap: 12px;
 }
 
-.category-pills span {
+.category-pills button {
   display: inline-flex;
   min-height: 46px;
   align-items: center;
   justify-content: center;
   padding: 12px 20px;
+  border: 0;
   border-radius: 999px;
   color: #fff;
   background:linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  font: inherit;
   font-size: 0.9rem;
   font-weight: 900;
+  cursor: pointer;
+  transition:
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
-.category-pills span:first-child {
-  background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
+.category-pills button:hover,
+.category-pills button:focus-visible {
   box-shadow:
     0 0 28px rgba(255, 90, 18, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  outline: none;
+  transform: translateY(-2px);
 }
 
 .project-carousel {
@@ -708,8 +829,8 @@ const activeProcessIndex = computed(
   top: 42%;
   z-index: 3;
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   place-items: center;
   border: 1px solid var(--color-accent);
   border-radius: 0;
@@ -743,7 +864,7 @@ const activeProcessIndex = computed(
 .project-nav span {
   display: block;
   margin-top: -2px;
-  font-size: 1.6rem;
+  font-size: 1.28rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -1036,7 +1157,6 @@ const activeProcessIndex = computed(
     cursor: grab;
     scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
     scrollbar-width: thin;
-    touch-action: pan-y;
     user-select: none;
   }
 
@@ -1049,7 +1169,8 @@ const activeProcessIndex = computed(
   }
 
   .hero-service-card:hover,
-  .hero-service-card:focus-visible {
+  .hero-service-card:focus-visible,
+  .hero-service-card--active {
     flex-basis: 300px;
     flex-grow: 0;
   }
@@ -1068,7 +1189,6 @@ const activeProcessIndex = computed(
     cursor: grab;
     scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
     scrollbar-width: thin;
-    touch-action: pan-y;
     user-select: none;
   }
 
@@ -1108,7 +1228,8 @@ const activeProcessIndex = computed(
   }
 
   .hero-service-card:hover,
-  .hero-service-card:focus-visible {
+  .hero-service-card:focus-visible,
+  .hero-service-card--active {
     flex-basis: 258px;
     flex-grow: 0;
     transform: translateY(-4px);
@@ -1138,7 +1259,7 @@ const activeProcessIndex = computed(
     background: #0b0b0b;
   }
 
-  .category-pills span {
+  .category-pills button {
     min-height: 34px;
     flex: 1 1 0;
     padding: 8px 6px;
@@ -1149,10 +1270,6 @@ const activeProcessIndex = computed(
     line-height: 1;
     white-space: nowrap;
     text-align: center;
-  }
-
-  .category-pills span:first-child {
-    background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
   }
 
   .project-grid {
@@ -1180,8 +1297,8 @@ const activeProcessIndex = computed(
   .project-nav {
     display: grid;
     top: 38%;
-    width: 38px;
-    height: 38px;
+    width: 30.4px;
+    height: 30.4px;
   }
 
   .project-nav--prev {
