@@ -48,6 +48,7 @@ Before editing files, Codex must:
 - Keep page-level views in `src/views`.
 - Do not add dependencies without explaining why.
 - Prefer small, understandable changes because the user is learning.
+- When the user asks for RWD/responsive changes, do not change the desktop/PC version unless they explicitly request it. If the scope is unclear, ask a question before editing.
 - After relevant code changes, run `npm run build` and report whether it passed.
 
 ## Image Loading Rules

@@ -159,108 +159,6 @@ main {
   min-height: 70vh;
 }
 
-.site-footer {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(260px, 1.25fr) minmax(240px, 1fr);
-  align-items: start;
-  gap: 24px;
-  overflow: hidden;
-  padding: 54px clamp(20px, 5vw, 72px) 42px;
-  border-top: 1px solid var(--color-line);
-  color: #f8f8f4;
-  background:
-    radial-gradient(ellipse at 48% 118%, rgba(255, 90, 18, 0.2), transparent 34rem),
-    radial-gradient(ellipse at 92% 0%, rgba(144, 40, 16, 0.18), transparent 28rem),
-    linear-gradient(145deg, rgba(18, 9, 6, 0.92), rgba(5, 5, 5, 0.96));
-}
-
-:deep(.footer-watermark) {
-  position: absolute;
-  right: clamp(16px, 5vw, 72px);
-  bottom: -20px;
-  z-index: 0;
-  color: rgba(255, 255, 255, 0.055);
-  font-size: clamp(4.5rem, 14vw, 12rem);
-  font-style: italic;
-  font-weight: 950;
-  line-height: 0.8;
-  pointer-events: none;
-}
-
-:deep(.footer-brand),
-:deep(.footer-contact),
-:deep(.footer-services),
-:deep(.footer-link) {
-  position: relative;
-  z-index: 1;
-}
-
-:deep(.site-footer p),
-:deep(.site-footer address) {
-  margin: 0;
-}
-
-:deep(.footer-logo) {
-  color: var(--color-accent);
-  font-size: 1.7rem;
-  font-style: italic;
-  font-weight: 950;
-}
-
-:deep(.footer-brand) {
-  display: grid;
-  gap: 6px;
-  grid-column: 2;
-  justify-items: center;
-  justify-self: center;
-  text-align: center;
-}
-
-:deep(.footer-contact) {
-  display: grid;
-  grid-column: 3;
-  gap: 6px;
-  justify-self: end;
-  color: #d6d6ce;
-  font-style: normal;
-  line-height: 1.6;
-  text-align: right;
-}
-
-:deep(.footer-services) {
-  display: grid;
-  grid-template-columns: repeat(2, max-content);
-  grid-column: 1;
-  grid-row: 1 / span 2;
-  gap: 10px 8px;
-  align-items: flex-start;
-  justify-self: start;
-  text-align: left;
-}
-
-:deep(.footer-services span) {
-  padding: 7px 10px;
-  border: 1px solid var(--color-line);
-  color: #ecece6;
-  background: rgba(255, 255, 255, 0.035);
-  font-weight: 800;
-}
-
-:deep(.footer-services span:last-child) {
-  grid-column: 1 / -1;
-  justify-self: stretch;
-  text-align: center;
-}
-
-:deep(.site-footer a) {
-  font-weight: 900;
-}
-
-:deep(.footer-link) {
-  color: var(--color-accent);
-}
-
 :deep(.hero-section),
 :deep(.page-hero),
 :deep(.section) {
@@ -402,37 +300,6 @@ main {
   transform: translateY(-1px);
 }
 
-:deep(.process-list) {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 0;
-  padding: 0;
-  border-top: 1px solid var(--color-line);
-  border-left: 1px solid var(--color-line);
-  list-style: none;
-}
-
-:deep(.process-list li) {
-  display: grid;
-  gap: 20px;
-  min-height: 160px;
-  padding: 24px;
-  border-right: 1px solid var(--color-line);
-  border-bottom: 1px solid var(--color-line);
-  background: var(--color-panel);
-}
-
-:deep(.process-list span) {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: var(--color-accent);
-  font-weight: 950;
-}
-
 :deep(.category-list) {
   display: flex;
   flex-wrap: wrap;
@@ -461,30 +328,8 @@ main {
   gap: 16px;
 }
 
-@media (max-width: 900px) {
-  .site-footer {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  :deep(.footer-services) {
-    grid-column: 1;
-    grid-row: auto;
-  }
-
-  :deep(.footer-brand) {
-    grid-column: 2;
-  }
-
-  :deep(.footer-contact) {
-    grid-column: 1 / -1;
-    justify-self: end;
-    text-align: right;
-  }
-}
-
 @media (max-width: 720px) {
-  .site-header,
-  .site-footer {
+  .site-header {
     align-items: flex-start;
     grid-template-columns: 1fr;
   }
@@ -497,26 +342,9 @@ main {
     justify-content: flex-start;
   }
 
-  :deep(.footer-contact),
-  :deep(.footer-services),
-  :deep(.footer-brand),
-  :deep(.footer-link) {
-    grid-column: auto;
-  }
-
-  :deep(.footer-services) {
-    justify-self: start;
-    text-align: left;
-  }
-
-  :deep(.footer-brand) {
-    justify-self: center;
-    text-align: center;
-  }
-
-  :deep(.footer-contact) {
-    justify-self: end;
-    text-align: right;
+  :deep(.page-hero h1) {
+    font-size: clamp(2.25rem, 6.3vw, 5.18rem);
+    line-height: 1.14;
   }
 }
 </style>

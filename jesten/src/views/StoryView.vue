@@ -457,6 +457,11 @@ const storyPlaceholders = [
     padding-top: 84px;
   }
 
+  .story-hero h1 {
+    font-size: clamp(2.7rem, 6.48vw, 6.21rem);
+    line-height: 1.12;
+  }
+
   .story-hero::after {
     background:
       radial-gradient(circle at 74% 26%, rgba(255, 90, 18, 0.26), transparent 18rem),

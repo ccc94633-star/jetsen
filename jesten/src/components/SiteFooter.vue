@@ -15,17 +15,259 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     <div class="footer-brand">
       <p class="footer-logo">JETSEN</p>
       <p>杰森鐵作</p>
-      <RouterLink class="footer-link" to="/contact">聯絡諮詢</RouterLink>
+      <RouterLink class="footer-link" to="/contact">打造你的專屬鐵件</RouterLink>
     </div>
 
     <address class="footer-contact">
       <span>陳凱翔</span>
       <a href="tel:0981185728">0981-185728</a>
       <span>傳真：04 2277-7868</span>
-      <span>統編：91124640</span>
       <span>台中市太平區長龍路二段626號</span>
     </address>
 
 
   </footer>
 </template>
+
+<style scoped>
+.site-footer {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(260px, 1.25fr) minmax(240px, 1fr);
+  align-items: start;
+  gap: 24px;
+  overflow: hidden;
+  padding: 54px clamp(20px, 5vw, 72px) 42px;
+  border-top: 1px solid var(--color-line);
+  color: #f8f8f4;
+  background:
+    radial-gradient(ellipse at 48% 118%, rgba(255, 90, 18, 0.2), transparent 34rem),
+    radial-gradient(ellipse at 92% 0%, rgba(144, 40, 16, 0.18), transparent 28rem),
+    linear-gradient(145deg, rgba(18, 9, 6, 0.92), rgba(5, 5, 5, 0.96));
+}
+
+.footer-watermark {
+  position: absolute;
+  right: clamp(16px, 5vw, 72px);
+  bottom: -20px;
+  z-index: 0;
+  color: rgba(255, 255, 255, 0.055);
+  font-size: clamp(4.5rem, 14vw, 12rem);
+  font-style: italic;
+  font-weight: 950;
+  line-height: 0.8;
+  pointer-events: none;
+}
+
+.footer-brand,
+.footer-contact,
+.footer-services,
+.footer-link {
+  position: relative;
+  z-index: 1;
+}
+
+.site-footer p,
+.site-footer address {
+  margin: 0;
+}
+
+.footer-logo {
+  color: var(--color-accent);
+  font-size: 1.7rem;
+  font-style: italic;
+  font-weight: 950;
+}
+
+.footer-brand {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  gap: 6px;
+  align-self: center;
+  justify-items: center;
+  justify-self: center;
+  text-align: center;
+}
+
+.footer-contact {
+  display: grid;
+  grid-column: 3;
+  gap: 6px;
+  justify-self: end;
+  color: #d6d6ce;
+  font-style: normal;
+  line-height: 1.6;
+  text-align: right;
+}
+
+.footer-services {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  gap: 10px 8px;
+  align-items: flex-start;
+  justify-self: start;
+  text-align: left;
+}
+
+.footer-services span {
+  padding: 7px 10px;
+  border: 1px solid var(--color-line);
+  color: #ecece6;
+  background: rgba(255, 255, 255, 0.035);
+  font-weight: 800;
+}
+
+.footer-services span:last-child {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  text-align: center;
+}
+
+.site-footer a {
+  font-weight: 900;
+}
+
+.footer-link {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .site-footer {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .footer-services {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .footer-brand {
+    grid-column: 2;
+    grid-row: auto;
+  }
+
+  .footer-contact {
+    grid-column: 1 / -1;
+    justify-self: end;
+    text-align: right;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-footer {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+    gap: 28px;
+    align-items: flex-start;
+    min-height: clamp(520px, 102vw, 690px);
+    padding: 42px clamp(24px, 5.5vw, 38px) 18px;
+    background:
+      linear-gradient(90deg, rgba(49, 15, 6, 0.95), rgba(76, 25, 10, 0.92) 58%, rgba(49, 15, 6, 0.96)),
+      linear-gradient(145deg, rgba(18, 9, 6, 0.96), rgba(5, 5, 5, 0.98));
+  }
+
+  .footer-watermark {
+    right: -0.2em;
+    bottom: 0.65em;
+    font-size: clamp(8rem, 36vw, 15rem);
+    opacity: 0.18;
+  }
+
+  .footer-contact,
+  .footer-services,
+  .footer-brand,
+  .footer-link {
+    grid-column: auto;
+    
+  }
+
+  .footer-services {
+    display: none;
+  }
+
+  .footer-brand {
+    width: 100%;
+    grid-row: auto;
+    align-self: center;
+    justify-self: center;
+    gap: 20px;
+    text-align: center;
+  }
+
+  .footer-logo {
+    font-size: clamp(2.35rem, 8vw, 2.7rem);
+    line-height: 1;
+  }
+
+  .footer-brand p:not(.footer-logo) {
+    color: #fff;
+    font-size: clamp(1.35rem, 4.8vw, 1.62rem);
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  .footer-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: min(100%, 326px);
+    min-height: 60px;
+    margin-top: 10px;
+    padding: 12px 18px;
+    border: 1px solid rgba(137, 78, 58, 0.72);
+    color: #fff;
+    background: rgba(60, 24, 14, 0.72);
+    font-size: 1.2rem;
+    font-weight: 950;
+    line-height: 1.2;
+    text-decoration: none;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.42);
+  }
+
+  .footer-link:hover,
+  .footer-link:focus-visible {
+    border-color: rgba(255, 90, 18, 0.82);
+    color: #fff;
+    background: rgba(104, 38, 18, 0.88);
+    transform: translateY(-2px);
+  }
+
+  .footer-contact {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
+    gap: 8px 18px;
+    align-self: end;
+    align-items: end;
+    justify-self: end;
+    color: #fff;
+    font-size: clamp(0.9rem, 3vw, 1.55rem);
+    line-height: 1.2;
+    text-align: left;
+  }
+
+  .footer-contact span:nth-child(3),
+  .footer-contact span:nth-child(4) {
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .footer-contact span:nth-child(3) {
+    grid-row: 1;
+  }
+
+  .footer-contact span:nth-child(4) {
+    grid-row: 2;
+  }
+
+  .footer-contact a {
+    width: max-content;
+    color: #fff;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+}
+</style>

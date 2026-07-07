@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import ScrollDownButton from '@/components/ScrollDownButton.vue'
 import contactCanopyHero from '@/assets/images/products-pc/01-canopy/line_album_作品集_260702_11.webp'
 import contactRailingHero from '@/assets/images/products-pc/02-railings-handrails/line_album_作品集_260702_34.webp'
 import contactDesignerHero from '@/assets/images/products-pc/03-designer-metalwork/3d652361-fd2e-4231-b254-e078c01d4f7e.webp'
@@ -23,7 +24,6 @@ onBeforeUnmount(() => {
 const contactDetails = [
   ['電話', '0981-185728'],
   ['傳真', '04 2277-7868'],
-  ['統編', '91124640'],
   ['地址', '台中市太平區長龍路二段626號'],
 ]
 
@@ -80,6 +80,7 @@ const faqs = [
       <span>你的專屬鐵件了嗎？</span>
     </h1>
     </div>
+    <ScrollDownButton />
   </section>
 
   <section class="section contact-prep">
@@ -457,13 +458,21 @@ const faqs = [
   border-radius: 8px;
   background: #111;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.42);
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease;
 }
 
-.contact-info-strip div:nth-child(1) {
+.contact-info-strip:not(:hover) div:nth-child(1),
+.contact-info-strip div:hover {
   border-color: rgba(255, 92, 18, 0.72);
   background:
     radial-gradient(circle at 69% 48%, rgba(255, 112, 28, 0.22), transparent 34%),
     #bb3f03;
+}
+
+.contact-info-strip div:nth-child(3) {
+  grid-column: span 2;
 }
 
 .contact-info-strip div:nth-child(4) {
@@ -599,16 +608,32 @@ const faqs = [
     padding-block: clamp(48px, 11vw, 72px);
   }
 
+  .contact-hero h1 {
+    font-size: clamp(2.7rem, 6.9vw, 6.48rem);
+    line-height: 1.12;
+  }
+
   .contact-info-strip {
     grid-template-columns: 1fr;
   }
 
   .contact-info-strip div {
-    min-height: 112px;
+    width: 90%;
+    min-height: 90px;
+    justify-self: center;
+  }
+
+  .contact-info-strip div:nth-child(3) {
+    grid-column: span 1;
+  }
+
+  .contact-info-strip span {
+    font-size: 1.05rem;
   }
 
   .contact-info-strip strong {
     max-width: 82%;
+    font-size: 0.82rem;
   }
 
   .faq-item-row summary {

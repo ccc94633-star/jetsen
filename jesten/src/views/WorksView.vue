@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import ScrollDownButton from '@/components/ScrollDownButton.vue'
 import { works } from '@/data/works'
 
 const heroImages = works.map((work) => work.coverImage)
@@ -52,6 +53,7 @@ const highlights = [
       收錄杰森鐵作常見施工類型，從遮雨棚、欄杆扶手到造型鐵件與隱形鐵窗，依照現場條件客製規劃。
     </p>
     </div>
+    <ScrollDownButton />
   </section>
 
   <section class="section works-board">

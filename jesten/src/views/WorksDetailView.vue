@@ -1,6 +1,7 @@
 ﻿<script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import ScrollDownButton from '@/components/ScrollDownButton.vue'
 import { findWorkBySlug, works } from '@/data/works'
 
 const route = useRoute()
@@ -9,6 +10,103 @@ const relatedWorks = computed(() => works.filter((item) => item.slug !== work.va
 const activeImage = ref(null)
 const selectedServiceIndex = ref(null)
 const hoveredServiceIndex = ref(null)
+
+const scopeTrack = ref(null)
+const isScopeDragging = ref(false)
+
+const createDragScroll = (trackRef, draggingRef) => {
+  const drag = { pointerId: null, startX: 0, scrollLeft: 0 }
+
+  const start = (event) => {
+    const track = trackRef.value
+
+    if (!track || (event.pointerType === 'mouse' && event.button !== 0)) return
+
+    drag.pointerId = event.pointerId
+    drag.startX = event.clientX
+    drag.scrollLeft = track.scrollLeft
+    draggingRef.value = true
+    track.setPointerCapture?.(event.pointerId)
+  }
+
+  const move = (event) => {
+    const track = trackRef.value
+
+    if (!track || !draggingRef.value || event.pointerId !== drag.pointerId) return
+
+    track.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX)
+  }
+
+  const stop = (event) => {
+    const track = trackRef.value
+
+    if (!draggingRef.value || event.pointerId !== drag.pointerId) return
+
+    if (track?.hasPointerCapture?.(event.pointerId)) {
+      track.releasePointerCapture(event.pointerId)
+    }
+    drag.pointerId = null
+    draggingRef.value = false
+  }
+
+  return { start, move, stop }
+}
+
+const scopeDrag = createDragScroll(scopeTrack, isScopeDragging)
+
+const relatedTrack = ref(null)
+const relatedPage = ref(0)
+const relatedPageCount = ref(1)
+
+const getRelatedStep = (track) => {
+  const isMobile = window.matchMedia('(max-width: 720px)').matches
+  return isMobile ? track.clientWidth * 0.9 : track.clientWidth
+}
+
+const scrollRelated = (direction) => {
+  const track = relatedTrack.value
+
+  if (!track) return
+
+  track.scrollBy({
+    left: direction * getRelatedStep(track),
+    behavior: 'smooth',
+  })
+}
+
+const updateRelatedPagination = () => {
+  const track = relatedTrack.value
+
+  if (!track) return
+
+  const step = getRelatedStep(track)
+  const maxScroll = track.scrollWidth - track.clientWidth
+
+  if (step <= 0 || maxScroll <= 0) {
+    relatedPageCount.value = 1
+    relatedPage.value = 0
+    return
+  }
+
+  relatedPageCount.value = Math.round(maxScroll / step) + 1
+  relatedPage.value = Math.min(
+    relatedPageCount.value - 1,
+    Math.round(track.scrollLeft / step),
+  )
+}
+
+const goToRelatedPage = (index) => {
+  const track = relatedTrack.value
+
+  if (!track) return
+
+  const maxScroll = track.scrollWidth - track.clientWidth
+
+  track.scrollTo({
+    left: Math.min(maxScroll, index * getRelatedStep(track)),
+    behavior: 'smooth',
+  })
+}
 
 const scopeDescriptions = {
   canopy: [
@@ -54,12 +152,19 @@ watch(activeImage, (image) => {
   document.body.style.overflow = image ? 'hidden' : ''
 })
 
+watch(relatedWorks, () => {
+  nextTick(updateRelatedPagination)
+})
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
+  window.addEventListener('resize', updateRelatedPagination)
+  nextTick(updateRelatedPagination)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', updateRelatedPagination)
   document.body.style.overflow = ''
 })
 </script>
@@ -75,6 +180,8 @@ onBeforeUnmount(() => {
         <h1>{{ work.headline }}</h1>
         <p>{{ work.detail }}</p>
       </div>
+
+      <ScrollDownButton />
     </section>
 
     <section class="section service-block">
@@ -82,7 +189,16 @@ onBeforeUnmount(() => {
         <p class="eyebrow">Scope</p>
         <h2>{{ work.title }}施作範圍</h2>
       </div>
-      <div class="scope-row">
+      <div
+        ref="scopeTrack"
+        class="scope-row"
+        :class="{ 'scope-row--dragging': isScopeDragging }"
+        @pointerdown="scopeDrag.start"
+        @pointermove="scopeDrag.move"
+        @pointerup="scopeDrag.stop"
+        @pointercancel="scopeDrag.stop"
+        @lostpointercapture="scopeDrag.stop"
+      >
         <article
           v-for="(service, index) in work.services"
           :key="service"
@@ -99,6 +215,9 @@ onBeforeUnmount(() => {
           <h3>{{ service }}</h3>
           <p>{{ activeScopeDescriptions[index] }}</p>
         </article>
+      </div>
+      <div class="scroll-guide" aria-hidden="true">
+        <span></span>
       </div>
     </section>
 
@@ -128,17 +247,51 @@ onBeforeUnmount(() => {
         <p class="eyebrow">More Works</p>
         <h2>更多相關作品</h2>
       </div>
-      <div class="related-grid">
-        <RouterLink
-          v-for="item in relatedWorks"
-          :key="item.slug"
-          class="related-card"
-          :to="{ name: 'works-detail', params: { slug: item.slug } }"
+      <div class="related-carousel">
+        <button
+          v-if="relatedPageCount > 1"
+          class="related-nav related-nav--prev"
+          type="button"
+          aria-label="上一項相關作品"
+          @click="scrollRelated(-1)"
         >
-          <img :src="item.coverImage" :alt="`${item.title}作品照片`" loading="lazy" />
-          <span>{{ item.tag }}</span>
-          <strong>{{ item.title }}</strong>
-        </RouterLink>
+          <span aria-hidden="true">‹</span>
+        </button>
+        <div ref="relatedTrack" class="related-grid" @scroll="updateRelatedPagination">
+          <RouterLink
+            v-for="item in relatedWorks"
+            :key="item.slug"
+            class="related-card"
+            :to="{ name: 'works-detail', params: { slug: item.slug } }"
+          >
+            <img :src="item.coverImage" :alt="`${item.title}作品照片`" loading="lazy" />
+            <span>{{ item.tag }}</span>
+            <strong>{{ item.title }}</strong>
+          </RouterLink>
+        </div>
+        <button
+          v-if="relatedPageCount > 1"
+          class="related-nav related-nav--next"
+          type="button"
+          aria-label="下一項相關作品"
+          @click="scrollRelated(1)"
+        >
+          <span aria-hidden="true">›</span>
+        </button>
+      </div>
+
+      <div class="related-pagination" role="tablist" aria-label="相關作品頁碼">
+        <button
+          v-for="index in relatedPageCount"
+          :key="index"
+          type="button"
+          class="related-page-btn"
+          :class="{ 'related-page-btn--active': index - 1 === relatedPage }"
+          :aria-current="index - 1 === relatedPage ? 'true' : undefined"
+          @click="goToRelatedPage(index - 1)"
+        >
+          {{ index }}
+        </button>
       </div>
     </section>
 
@@ -369,6 +522,86 @@ onBeforeUnmount(() => {
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
 
+.scope-row--dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+.scope-row--dragging .scope-card {
+  pointer-events: none;
+}
+
+.scope-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scope-row::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.scope-row::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 90, 18, 0.84);
+}
+
+.scroll-guide {
+  display: none;
+  justify-content: end;
+  max-width: 1180px;
+  height: 26px;
+  margin: 12px auto 0;
+  pointer-events: none;
+}
+
+.scroll-guide::before {
+  display: block;
+  width: min(180px, 42vw);
+  height: 2px;
+  align-self: center;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 90, 18, 0.85), transparent);
+  content: '';
+}
+
+.scroll-guide span {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 20px;
+  margin-top: -22px;
+  border-radius: 999px;
+  background: rgba(255, 90, 18, 0.92);
+  box-shadow: 0 0 24px rgba(255, 90, 18, 0.34);
+  animation: scroll-guide-drift 1.8s ease-in-out infinite;
+}
+
+.scroll-guide span::after {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #fff;
+  border-right: 2px solid #fff;
+  content: '';
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@keyframes scroll-guide-drift {
+
+  0%,
+  100% {
+    transform: translateX(-48px);
+    opacity: 0.5;
+  }
+
+  45% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .scope-card {
   position: relative;
   isolation: isolate;
@@ -429,8 +662,8 @@ onBeforeUnmount(() => {
 
 .scope-number {
   position: absolute;
-  right: 12px;
-  bottom: -16px;
+  right: 0;
+  bottom: 0;
   z-index: 0;
   color: rgba(255, 107, 50, 0.18);
   font-size: clamp(7rem, 10vw, 10.5rem);
@@ -466,7 +699,7 @@ onBeforeUnmount(() => {
   max-width: 280px;
   margin: 0;
   color: currentColor;
-  font-size: 0.84rem;
+  font-size: 1.008rem;
   line-height: 1.58;
   opacity: 0;
   transform: translateY(10px);
@@ -628,16 +861,68 @@ onBeforeUnmount(() => {
     #070707;
 }
 
-.related-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+.related-carousel {
+  position: relative;
   max-width: 1180px;
+  margin-inline: auto;
+}
+
+.related-grid {
+  display: flex;
+  gap: 14px;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.related-nav {
+  position: absolute;
+  top: 42%;
+  z-index: 3;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--color-accent);
+  border-radius: 0;
+  color: #fff;
+  background: rgba(12, 12, 12, 0.92);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.related-nav:hover,
+.related-nav:focus-visible {
+  border-color: #ff7a32;
+  background: rgba(22, 22, 22, 0.96);
+  outline: none;
+  transform: translateY(-50%) scale(1.04);
+}
+
+.related-nav--prev {
+  left: -22px;
+}
+
+.related-nav--next {
+  right: -22px;
+}
+
+.related-nav span {
+  display: block;
+  margin-top: -2px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .related-card {
   display: grid;
+  flex: 0 0 calc((100% - 2 * 14px) / 3);
   gap: 10px;
+  min-width: 0;
   overflow: hidden;
   padding-bottom: 18px;
   border-radius: 8px;
@@ -667,21 +952,74 @@ onBeforeUnmount(() => {
   font-size: 1.2rem;
 }
 
+.related-pagination {
+  display: none;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.related-page-btn {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: #8f8f8f;
+  background: #111;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.related-page-btn:hover,
+.related-page-btn:focus-visible {
+  border-color: rgba(255, 90, 18, 0.5);
+  color: #fff;
+  outline: none;
+}
+
+.related-page-btn--active {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
+  box-shadow: 0 0 20px rgba(255, 90, 18, 0.32);
+  transform: translateY(-2px);
+}
+
 @media (max-width: 900px) {
-  .results-heading,
-  .related-grid {
+  .results-heading {
     grid-template-columns: 1fr 1fr;
   }
 
   .scope-row {
     overflow-x: auto;
     overscroll-behavior-x: contain;
+    padding: 10px;
+    scroll-padding-inline: 10px;
     scroll-snap-type: x proximity;
+    cursor: grab;
+    scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  .service-block .scroll-guide {
+    display: grid;
   }
 
   .scope-card {
     flex: 0 0 240px;
     min-height: 168px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
     scroll-snap-align: start;
   }
 
@@ -694,6 +1032,24 @@ onBeforeUnmount(() => {
   .photo-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .related-card {
+    flex: 0 0 min(60vw, 320px);
+  }
+
+  .related-nav {
+    top: 38%;
+    width: 38px;
+    height: 38px;
+  }
+
+  .related-nav--prev {
+    left: 6px;
+  }
+
+  .related-nav--next {
+    right: 6px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -701,14 +1057,17 @@ onBeforeUnmount(() => {
     min-height: 82vh;
   }
 
+  .hero-copy h1 {
+    font-size: clamp(2.34rem, 6.3vw, 5.94rem);
+    line-height: 1.1;
+  }
+
   .hero-topbar {
     align-items: flex-start;
   }
 
   .results-heading,
-  .stats-grid,
-  .photo-grid,
-  .related-grid {
+  .stats-grid {
     grid-template-columns: 1fr;
   }
 
@@ -734,8 +1093,37 @@ onBeforeUnmount(() => {
     transform: none;
   }
 
+  .photo-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .photo-grid img {
+    min-height: 0;
+    aspect-ratio: 3 / 4;
+  }
+
   .photo-grid figure:nth-child(5n + 1) {
     grid-row: auto;
+  }
+
+  .related-grid {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 0 0 16px;
+    scroll-padding-inline: clamp(16px, 4vw, 24px);
+    scroll-snap-type: x proximity;
+    scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+  }
+
+  .related-card {
+    flex: 0 0 min(82vw, 340px);
+    scroll-snap-align: start;
+  }
+
+  .related-pagination {
+    display: flex;
   }
 }
 </style>

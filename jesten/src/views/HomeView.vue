@@ -1,4 +1,5 @@
 <script setup>
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { works } from '@/data/works'
 import heroVideo from '@/assets/videos/jestenVideo.MP4'
 
@@ -36,6 +37,114 @@ const serviceCards = [
 ]
 
 const workCategories = works
+const serviceTrack = ref(null)
+const projectTrack = ref(null)
+const processTrack = ref(null)
+const isServiceDragging = ref(false)
+const isProcessDragging = ref(false)
+
+const createDragScroll = (trackRef, draggingRef) => {
+  const drag = { pointerId: null, startX: 0, scrollLeft: 0 }
+
+  const start = (event) => {
+    const track = trackRef.value
+
+    if (!track || (event.pointerType === 'mouse' && event.button !== 0)) return
+
+    drag.pointerId = event.pointerId
+    drag.startX = event.clientX
+    drag.scrollLeft = track.scrollLeft
+    draggingRef.value = true
+    track.setPointerCapture?.(event.pointerId)
+  }
+
+  const move = (event) => {
+    const track = trackRef.value
+
+    if (!track || !draggingRef.value || event.pointerId !== drag.pointerId) return
+
+    track.scrollLeft = drag.scrollLeft - (event.clientX - drag.startX)
+  }
+
+  const stop = (event) => {
+    const track = trackRef.value
+
+    if (!draggingRef.value || event.pointerId !== drag.pointerId) return
+
+    if (track?.hasPointerCapture?.(event.pointerId)) {
+      track.releasePointerCapture(event.pointerId)
+    }
+    drag.pointerId = null
+    draggingRef.value = false
+  }
+
+  return { start, move, stop }
+}
+
+const serviceDrag = createDragScroll(serviceTrack, isServiceDragging)
+const processDrag = createDragScroll(processTrack, isProcessDragging)
+
+const getProjectStep = (track) => {
+  const isMobile = window.matchMedia('(max-width: 720px)').matches
+  return isMobile ? track.clientWidth * 0.9 : track.clientWidth
+}
+
+const scrollProjects = (direction) => {
+  const track = projectTrack.value
+
+  if (!track) return
+
+  track.scrollBy({
+    left: direction * getProjectStep(track),
+    behavior: 'smooth',
+  })
+}
+
+const projectPage = ref(0)
+const projectPageCount = ref(1)
+
+const updateProjectPagination = () => {
+  const track = projectTrack.value
+
+  if (!track) return
+
+  const step = getProjectStep(track)
+  const maxScroll = track.scrollWidth - track.clientWidth
+
+  if (step <= 0 || maxScroll <= 0) {
+    projectPageCount.value = 1
+    projectPage.value = 0
+    return
+  }
+
+  projectPageCount.value = Math.round(maxScroll / step) + 1
+  projectPage.value = Math.min(
+    projectPageCount.value - 1,
+    Math.round(track.scrollLeft / step),
+  )
+}
+
+const goToProjectPage = (index) => {
+  const track = projectTrack.value
+
+  if (!track) return
+
+  const maxScroll = track.scrollWidth - track.clientWidth
+
+  track.scrollTo({
+    left: Math.min(maxScroll, index * getProjectStep(track)),
+    behavior: 'smooth',
+  })
+}
+
+onMounted(() => {
+  updateProjectPagination()
+  window.addEventListener('resize', updateProjectPagination)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateProjectPagination)
+})
 
 const processSteps = [
   {
@@ -59,25 +168,23 @@ const processSteps = [
     text: '檢查固定、表面與使用狀態，完成現場交付。',
   },
 ]
+
+const selectedProcessIndex = ref(null)
+const hoveredProcessIndex = ref(null)
+const activeProcessIndex = computed(
+  () => hoveredProcessIndex.value ?? selectedProcessIndex.value ?? 0,
+)
 </script>
 
 <template>
   <section class="home-hero" aria-label="杰森鐵作首頁主視覺">
-    <video
-      class="hero-video"
-      :src="heroVideo"
-      autoplay
-      muted
-      loop
-      playsinline
-      preload="metadata"
-      aria-hidden="true"
-    ></video>
+    <video class="hero-video" :src="heroVideo" autoplay muted loop playsinline preload="metadata"
+      aria-hidden="true"></video>
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
       <p class="eyebrow">JETSEN Metalwork</p>
-      <h1>鐵件工程，要有結構，也要有俐落的完成度。</h1>
+      <h1>每一道鐵件，都是安全與美感的堅實承諾。</h1>
       <p>
         杰森鐵作承接不鏽鋼門窗、欄杆扶手、隱形鐵窗、採光罩、快速捲門與設計師鐵件，從丈量、製作到安裝都重視現場安全與細節。
       </p>
@@ -89,21 +196,30 @@ const processSteps = [
   </section>
 
   <section class="hero-services-band">
-  
-    <div class="hero-service-strip" aria-label="服務項目">
+    <div class="services-heading">
+      <p class="eyebrow">Services</p>
+      <h2>服務項目</h2>
     </div>
-    
-      <article
-        v-for="service in serviceCards"
-        :key="service.title"
-        class="hero-service-card"
-        :class="`hero-service-card--${service.tone}`"
-        tabindex="0"
-      >
+    <div
+      ref="serviceTrack"
+      class="hero-service-strip"
+      :class="{ 'hero-service-strip--dragging': isServiceDragging }"
+      aria-label="服務項目"
+      @pointerdown="serviceDrag.start"
+      @pointermove="serviceDrag.move"
+      @pointerup="serviceDrag.stop"
+      @pointercancel="serviceDrag.stop"
+      @lostpointercapture="serviceDrag.stop"
+    >
+      <article v-for="service in serviceCards" :key="service.title" class="hero-service-card"
+        :class="`hero-service-card--${service.tone}`" tabindex="0">
         <span>{{ service.number }}</span>
         <h2>{{ service.title }}</h2>
         <p>{{ service.description }}</p>
       </article>
+    </div>
+    <div class="scroll-guide" aria-hidden="true">
+      <span></span>
     </div>
   </section>
 
@@ -126,25 +242,35 @@ const processSteps = [
       </div>
       <RouterLink class="text-link" to="/works">前往作品頁</RouterLink>
       <div class="category-pills" aria-label="Works categories">
-        <span>All</span>
         <span v-for="category in workCategories" :key="category.title">{{ category.title }}</span>
       </div>
     </div>
 
-    <div class="project-grid">
-      <RouterLink
-        v-for="category in workCategories"
-        :key="category.slug"
-        class="project-card"
-        :to="{ name: 'works-detail', params: { slug: category.slug } }"
-        :aria-label="`查看${category.title}作品`"
-      >
-        <img :src="category.coverImage" :alt="`${category.title}工程作品`" loading="lazy" />
-        <div>
-          <span>{{ category.title }}</span>
-          <p>{{ category.description }}</p>
-        </div>
-      </RouterLink>
+    <div class="project-carousel">
+      <button class="project-nav project-nav--prev" type="button" aria-label="上一組作品" @click="scrollProjects(-1)">
+        <span aria-hidden="true">‹</span>
+      </button>
+      <div ref="projectTrack" class="project-grid" @scroll="updateProjectPagination">
+        <RouterLink v-for="category in workCategories" :key="category.slug" class="project-card"
+          :to="{ name: 'works-detail', params: { slug: category.slug } }" :aria-label="`查看${category.title}作品`">
+          <img :src="category.coverImage" :alt="`${category.title}工程作品`" loading="lazy" />
+          <div>
+            <span>{{ category.title }}</span>
+            <p>{{ category.description }}</p>
+          </div>
+        </RouterLink>
+      </div>
+      <button class="project-nav project-nav--next" type="button" aria-label="下一組作品" @click="scrollProjects(1)">
+        <span aria-hidden="true">›</span>
+      </button>
+    </div>
+
+    <div class="project-pagination" role="tablist" aria-label="作品頁碼">
+      <button v-for="index in projectPageCount" :key="index" type="button" class="project-page-btn"
+        :class="{ 'project-page-btn--active': index - 1 === projectPage }"
+        :aria-current="index - 1 === projectPage ? 'true' : undefined" @click="goToProjectPage(index - 1)">
+        {{ index }}
+      </button>
     </div>
   </section>
 
@@ -162,21 +288,41 @@ const processSteps = [
         <p class="eyebrow">Process</p>
         <h2>施工流程</h2>
       </div>
-      <p>
-        從諮詢到驗收，每一步都保留清楚節點，方便屋主掌握進度與品質。
-      </p>
     </div>
 
-    <ol class="process-list">
-      <li v-for="(step, index) in processSteps" :key="step.title">
-        <span>{{ index + 1 }}</span>
+    <ol
+      ref="processTrack"
+      class="process-list"
+      :class="{ 'process-list--dragging': isProcessDragging }"
+      @pointerdown="processDrag.start"
+      @pointermove="processDrag.move"
+      @pointerup="processDrag.stop"
+      @pointercancel="processDrag.stop"
+      @lostpointercapture="processDrag.stop"
+    >
+      <li
+        v-for="(step, index) in processSteps"
+        :key="step.title"
+        class="process-card"
+        :class="{ 'process-card--active': activeProcessIndex === index }"
+        tabindex="0"
+        @mouseenter="hoveredProcessIndex = index"
+        @mouseleave="hoveredProcessIndex = null"
+        @click="selectedProcessIndex = index"
+        @focus="hoveredProcessIndex = index"
+        @blur="hoveredProcessIndex = null"
+      >
+        <span class="process-number" aria-hidden="true">{{ index + 1 }}</span>
         <strong>{{ step.title }}</strong>
         <p>{{ step.text }}</p>
       </li>
     </ol>
+    <div class="scroll-guide process-scroll-guide" aria-hidden="true">
+      <span></span>
+    </div>
   </section>
 
-  
+
 </template>
 
 <style scoped>
@@ -245,6 +391,22 @@ const processSteps = [
     #070707;
 }
 
+.services-heading {
+  max-width: 1180px;
+  margin: 0 auto clamp(20px, 3vw, 32px);
+}
+
+.services-heading .eyebrow {
+  margin-bottom: 10px;
+}
+
+.services-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(1.8rem, 3vw, 2.65rem);
+  font-weight: 950;
+}
+
 .hero-service-strip {
   display: flex;
   gap: 0;
@@ -255,6 +417,47 @@ const processSteps = [
   border-radius: 8px;
   background: #0d0d0d;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+}
+
+.hero-service-strip--dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+.hero-service-strip--dragging .hero-service-card {
+  pointer-events: none;
+}
+
+.process-list--dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+
+.process-list--dragging li {
+  pointer-events: none;
+}
+
+.hero-service-strip::-webkit-scrollbar,
+.process-list::-webkit-scrollbar,
+.project-grid::-webkit-scrollbar,
+.category-pills::-webkit-scrollbar {
+  height: 6px;
+}
+
+.hero-service-strip::-webkit-scrollbar-track,
+.process-list::-webkit-scrollbar-track,
+.project-grid::-webkit-scrollbar-track,
+.category-pills::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+}
+
+.hero-service-strip::-webkit-scrollbar-thumb,
+.process-list::-webkit-scrollbar-thumb,
+.project-grid::-webkit-scrollbar-thumb,
+.category-pills::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 90, 18, 0.84);
 }
 
 .hero-service-card {
@@ -356,6 +559,63 @@ const processSteps = [
     #141414;
 }
 
+.scroll-guide {
+  display: none;
+  justify-content: end;
+  max-width: 1180px;
+  height: 26px;
+  margin: 12px auto 0;
+  pointer-events: none;
+}
+
+.scroll-guide::before {
+  display: block;
+  width: min(180px, 42vw);
+  height: 2px;
+  align-self: center;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 90, 18, 0.85), transparent);
+  content: '';
+}
+
+.scroll-guide span {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 20px;
+  margin-top: -22px;
+  border-radius: 999px;
+  background: rgba(255, 90, 18, 0.92);
+  box-shadow: 0 0 24px rgba(255, 90, 18, 0.34);
+  animation: scroll-guide-drift 1.8s ease-in-out infinite;
+}
+
+.scroll-guide span::after {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #fff;
+  border-right: 2px solid #fff;
+  content: '';
+  transform: translateY(-50%) rotate(45deg);
+}
+
+@keyframes scroll-guide-drift {
+
+  0%,
+  100% {
+    transform: translateX(-48px);
+    opacity: 0.5;
+  }
+
+  45% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .intro-section {
   display: grid;
   grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1fr);
@@ -392,7 +652,11 @@ const processSteps = [
   max-width: 620px;
 }
 
-.works-toolbar > .text-link {
+.works-toolbar .eyebrow {
+  text-align: center;
+}
+
+.works-toolbar>.text-link {
   display: none;
 }
 
@@ -411,7 +675,7 @@ const processSteps = [
   padding: 12px 20px;
   border-radius: 999px;
   color: #fff;
-  background: #171717;
+  background:linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   font-size: 0.9rem;
   font-weight: 900;
@@ -424,15 +688,69 @@ const processSteps = [
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
-.project-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(14px, 2vw, 18px);
+.project-carousel {
+  position: relative;
   max-width: 1180px;
   margin-inline: auto;
 }
 
+.project-grid {
+  display: flex;
+  gap: clamp(14px, 2vw, 18px);
+  max-width: 1180px;
+  margin-inline: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+.project-nav {
+  position: absolute;
+  top: 42%;
+  z-index: 3;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--color-accent);
+  border-radius: 0;
+  color: #fff;
+  background: rgba(12, 12, 12, 0.92);
+  box-shadow: none;
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.project-nav:hover,
+.project-nav:focus-visible {
+  border-color: #ff7a32;
+  background: rgba(22, 22, 22, 0.96);
+  outline: none;
+  transform: translateY(-50%) scale(1.04);
+}
+
+.project-nav--prev {
+  left: -22px;
+}
+
+.project-nav--next {
+  right: -22px;
+}
+
+.project-nav span {
+  display: block;
+  margin-top: -2px;
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
 .project-card {
+  flex: 0 0 calc((100% - 2 * clamp(14px, 2vw, 18px)) / 3);
+  min-width: 0;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.045);
   border-radius: 18px;
@@ -454,7 +772,7 @@ const processSteps = [
   transform: translateY(-4px);
 }
 
-.project-card > img {
+.project-card>img {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 11;
@@ -464,14 +782,14 @@ const processSteps = [
   transition: transform 260ms ease;
 }
 
-.project-card:hover > img {
+.project-card:hover>img {
   transform: scale(1.04);
 }
 
-.project-card > div {
+.project-card>div {
   display: grid;
   gap: 14px;
-  min-height: 220px;
+  min-height: 110px;
   padding: 18px 18px 20px;
   background: #111;
 }
@@ -485,10 +803,56 @@ const processSteps = [
 }
 
 .project-card p {
+  display: -webkit-box;
+  overflow: hidden;
   margin: 0;
   color: #8f8f8f;
   font-size: 0.95rem;
   line-height: 1.65;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.project-pagination {
+  display: none;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.project-page-btn {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+  color: #8f8f8f;
+  background: #111;
+  font-size: 0.85rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 180ms ease;
+}
+
+.project-page-btn:hover,
+.project-page-btn:focus-visible {
+  border-color: rgba(255, 90, 18, 0.5);
+  color: #fff;
+  outline: none;
+}
+
+.project-page-btn--active {
+  border-color: transparent;
+  color: #fff;
+  background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
+  box-shadow: 0 0 20px rgba(255, 90, 18, 0.32);
+  transform: translateY(-2px);
 }
 
 .craft-section {
@@ -522,85 +886,215 @@ const processSteps = [
 }
 
 .process-list {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(140px, 1fr));
-  gap: 16px;
+  display: flex;
+  gap: 0;
+  min-height: 210px;
   max-width: 1160px;
   margin: 0;
   padding: 0;
+  overflow: hidden;
   border: 0;
+  border-radius: 8px;
   list-style: none;
+  background: #0d0d0d;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
 
 .process-list li {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  align-content: start;
-  gap: 10px;
-  min-height: 150px;
-  padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 8px;
-  background:
-    linear-gradient(145deg, rgba(255, 90, 18, 0.12), transparent 42%),
-    #070707;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  flex: 1 1 0;
+  align-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  min-height: 210px;
+  overflow: hidden;
+  padding: 20px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f4f4ef;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), transparent 54%);
+  transition:
+    flex 360ms ease,
+    background 360ms ease,
+    border-color 360ms ease,
+    color 360ms ease,
+    transform 360ms ease;
 }
 
-.process-list span {
-  display: grid;
-  width: 34px;
-  height: 34px;
-  place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(180deg, #ff731f, var(--color-accent));
-  font-size: 0.9rem;
+.process-list li:last-child {
+  border-right: 0;
+}
+
+.process-list li::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.14), transparent 7rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.1), transparent 50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+  content: '';
+}
+
+.process-list li:hover,
+.process-list li:focus-visible,
+.process-list li.process-card--active {
+  z-index: 2;
+  flex-grow: 1.82;
+  border-color: rgba(255, 115, 31, 0.4);
+  color: #171717;
+  background: linear-gradient(180deg, #ff7a24, #f04a0a);
+  transform: translateY(-6px);
+  outline: none;
+}
+
+.process-list li:hover::before,
+.process-list li:focus-visible::before,
+.process-list li.process-card--active::before {
+  opacity: 1;
+}
+
+.process-number {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  color: rgba(255, 138, 76, 0.42);
+  font-size: clamp(7rem, 10vw, 10.5rem);
   font-weight: 950;
+  line-height: 0.8;
+  pointer-events: none;
+  user-select: none;
+  transition:
+    color 300ms ease,
+    opacity 300ms ease;
+}
+
+.process-list li:hover .process-number,
+.process-list li:focus-visible .process-number,
+.process-list li.process-card--active .process-number {
+  color: rgba(255, 255, 255, 0.34);
 }
 
 .process-list strong {
-  color: #fff;
-  font-size: 1.03rem;
-  line-height: 1.25;
+  position: relative;
+  z-index: 1;
+  max-width: 8em;
+  margin: 0;
+  color: currentColor;
+  font-size: clamp(1.35rem, 2vw, 2.1rem);
+  font-weight: 950;
+  line-height: 1;
 }
 
 .process-list p {
+  position: relative;
+  z-index: 1;
+  max-width: 280px;
   margin: 0;
-  color: var(--color-muted);
-  font-size: 0.86rem;
-  line-height: 1.55;
+  color: currentColor;
+  font-size: 1.008rem;
+  line-height: 1.58;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 280ms ease,
+    transform 280ms ease;
+}
+
+.process-list li:hover p,
+.process-list li:focus-visible p,
+.process-list li.process-card--active p {
+  opacity: 0.82;
+  transform: translateY(0);
+}
+
+.process-scroll-guide {
+  display: none;
+}
+
+.process-cta {
+  justify-self: center;
+  margin-top: clamp(26px, 4vw, 42px);
 }
 
 @media (max-width: 980px) {
-  .project-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .hero-services-band .scroll-guide {
+    display: grid;
   }
 
   .hero-service-strip {
+    gap: 12px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
+    padding: 10px;
+    scroll-padding-inline: 10px;
     scroll-snap-type: x proximity;
+    cursor: grab;
+    scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+    touch-action: pan-y;
+    user-select: none;
   }
 
   .hero-service-card {
     flex: 0 0 240px;
     min-height: 168px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
     scroll-snap-align: start;
   }
 
   .hero-service-card:hover,
   .hero-service-card:focus-visible {
     flex-basis: 300px;
+    flex-grow: 0;
+  }
+
+  .process-scroll-guide {
+    display: grid;
   }
 
   .process-list {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 10px;
+    scroll-padding-inline: 10px;
+    scroll-snap-type: x proximity;
+    cursor: grab;
+    scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  .process-list li {
+    flex: 0 0 240px;
+    min-height: 168px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    scroll-snap-align: start;
+  }
+
+  .process-list li:hover,
+  .process-list li:focus-visible,
+  .process-list li.process-card--active {
+    flex-basis: 300px;
   }
 }
 
 @media (max-width: 720px) {
   .home-hero {
     min-height: 84vh;
+  }
+
+  .hero-content h1 {
+    font-size: clamp(2.7rem, 6.9vw, 6.48rem);
+    line-height: 1.12;
   }
 
   .hero-service-strip {
@@ -616,6 +1110,7 @@ const processSteps = [
   .hero-service-card:hover,
   .hero-service-card:focus-visible {
     flex-basis: 258px;
+    flex-grow: 0;
     transform: translateY(-4px);
   }
 
@@ -624,7 +1119,6 @@ const processSteps = [
     transform: none;
   }
 
-  .intro-section,
   .craft-section {
     grid-template-columns: 1fr;
   }
@@ -634,20 +1128,104 @@ const processSteps = [
     flex-direction: column;
   }
 
-  .project-grid {
-    grid-template-columns: 1fr;
+  .category-pills {
+    flex-wrap: nowrap;
+    justify-content: stretch;
+    width: 100%;
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    background: #0b0b0b;
   }
 
-  .project-card > div {
+  .category-pills span {
+    min-height: 34px;
+    flex: 1 1 0;
+    padding: 8px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    background: rgba(255, 90, 18, 0.84);
+    font-size: 0.82rem;
+    line-height: 1;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .category-pills span:first-child {
+    background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
+  }
+
+  .project-grid {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 0 0 16px;
+    scroll-padding-inline: clamp(16px, 4vw, 24px);
+    scroll-snap-type: x proximity;
+    scrollbar-color: rgba(255, 90, 18, 0.84) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+  }
+
+  .project-card {
+    flex: 0 0 min(82vw, 340px);
+    flex-basis: min(82vw, 340px);
+    scroll-snap-align: start;
+  }
+
+  .project-pagination {
+    display: flex;
+  }
+
+  .project-nav {
+    display: grid;
+    top: 38%;
+    width: 38px;
+    height: 38px;
+  }
+
+  .project-nav--prev {
+    left: 6px;
+  }
+
+  .project-nav--next {
+    right: 6px;
+  }
+
+  .project-card>div {
     min-height: auto;
   }
 
   .process-list {
-    grid-template-columns: 1fr;
+    min-height: 156px;
   }
 
   .process-list li {
-    min-height: 126px;
+    flex-basis: 218px;
+    min-height: 156px;
+    padding: 18px;
   }
+
+  .process-list li:hover,
+  .process-list li:focus-visible,
+  .process-list li.process-card--active {
+    flex-basis: 258px;
+    transform: translateY(-4px);
+  }
+
+  .process-list p {
+    opacity: 0.78;
+    transform: none;
+  }
+
+  .process-scroll-guide {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .intro-section {
+    display: none;
+  }
+
 }
 </style>
