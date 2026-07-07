@@ -19,18 +19,22 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
+          cache-dependency-path: jesten/package-lock.json
 
       - name: Install dependencies
+        working-directory: jesten
         run: npm ci
 
       - name: Build
+        working-directory: jesten
         run: npm run build
 
       - name: Add SPA fallback
+        working-directory: jesten
         run: cp dist/index.html dist/404.html
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./jesten/dist
