@@ -276,6 +276,7 @@ onBeforeUnmount(() => {
           :key="service"
           class="scope-card"
           :class="{ 'scope-card--active': activeServiceIndex === index }"
+          :ref="(el) => setScopeCardRef(el, index)"
           tabindex="0"
           @mouseenter="hoveredServiceIndex = index"
           @mouseleave="hoveredServiceIndex = null"
@@ -959,11 +960,13 @@ onBeforeUnmount(() => {
   color: #fff;
   background: rgba(12, 12, 12, 0.92);
   cursor: pointer;
+  opacity: 0.8;
   transform: translateY(-50%);
   transition:
     background 180ms ease,
     border-color 180ms ease,
-    transform 180ms ease;
+    transform 180ms ease,
+    opacity 180ms ease;
 }
 
 .related-nav:hover,
@@ -971,6 +974,7 @@ onBeforeUnmount(() => {
   border-color: #ff7a32;
   background: rgba(22, 22, 22, 0.96);
   outline: none;
+  opacity: 1;
   transform: translateY(-50%) scale(1.04);
 }
 

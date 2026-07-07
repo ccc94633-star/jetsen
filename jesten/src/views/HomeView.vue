@@ -838,11 +838,13 @@ onUnmounted(() => {
   background: rgba(12, 12, 12, 0.92);
   box-shadow: none;
   cursor: pointer;
+  opacity: 0.8;
   transform: translateY(-50%);
   transition:
     background 180ms ease,
     border-color 180ms ease,
-    transform 180ms ease;
+    transform 180ms ease,
+    opacity 180ms ease;
 }
 
 .project-nav:hover,
@@ -850,6 +852,7 @@ onUnmounted(() => {
   border-color: #ff7a32;
   background: rgba(22, 22, 22, 0.96);
   outline: none;
+  opacity: 1;
   transform: translateY(-50%) scale(1.04);
 }
 
