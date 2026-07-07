@@ -361,8 +361,8 @@ const storyPlaceholders = [
 
 .principle-number {
   position: absolute;
-  right: 14px;
-  bottom: -18px;
+  right: 0;
+  bottom: 0;
   z-index: -1;
   color: rgba(255, 107, 50, 0.18);
   font-size: clamp(8rem, 14vw, 12rem);
