@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
 import founderImage from '@/assets/images/founder/founder.jpg'
 import storyCanopyHero from '@/assets/images/products-pc/01-canopy/line_album_作品集_260702_12.webp'
 import storyRailingHero from '@/assets/images/products-pc/02-railings-handrails/line_album_作品集_260702_43.webp'
@@ -79,6 +80,7 @@ const storyPlaceholders = [
       </div>
 
     </div>
+    <FloatingContactButtons />
   </section>
 
   <section class="section founder-section">

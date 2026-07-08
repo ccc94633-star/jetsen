@@ -1,6 +1,7 @@
 ﻿<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
 import ScrollDownButton from '@/components/ScrollDownButton.vue'
 import { findWorkBySlug, works } from '@/data/works'
 
@@ -253,6 +254,7 @@ onBeforeUnmount(() => {
         <p>{{ work.detail }}</p>
       </div>
 
+      <FloatingContactButtons />
       <ScrollDownButton />
     </section>
 

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
 import ScrollDownButton from '@/components/ScrollDownButton.vue'
 import contactCanopyHero from '@/assets/images/products-pc/01-canopy/line_album_作品集_260702_11.webp'
 import contactRailingHero from '@/assets/images/products-pc/02-railings-handrails/line_album_作品集_260702_34.webp'
@@ -25,7 +26,7 @@ const contactDetails = [
   ['電話', '0981-185728'],
   ['傳真', '04 2277-7868'],
   ['地址', '台中市太平區長龍路二段626號'],
-  ['官方 LINE', '@485quazl'],
+  ['官方LINE', '歡迎加入'],
 ]
 
 const requirements = ['施工項目', '現場照片', '大約尺寸', '施工地點', '希望完工時間']
@@ -84,6 +85,7 @@ const faqs = [
       <span>你的專屬鐵件了嗎？</span>
     </h1>
     </div>
+    <FloatingContactButtons />
     <ScrollDownButton />
   </section>
 
@@ -155,7 +157,7 @@ const faqs = [
         @blur="hoveredContactIndex = null"
       >
         <span>{{ label }}</span>
-        <strong>{{ value }}</strong>
+        <strong v-if="value">{{ value }}</strong>
       </div>
     </div>
   </section>
@@ -485,15 +487,6 @@ const faqs = [
     #bb3f03;
 }
 
-.contact-info-strip div:nth-child(3) {
-  grid-column: span 2;
-}
-
-.contact-info-strip div:nth-child(4) {
-  border-color: rgba(255, 255, 255, 0.78);
-  background: #f4f4f1;
-}
-
 .contact-info-strip span {
   position: relative;
   z-index: 1;
@@ -511,14 +504,6 @@ const faqs = [
   color: rgba(255, 255, 255, 0.84);
   font-size: clamp(0.66rem, 1vw, 0.78rem);
   line-height: 1.35;
-}
-
-.contact-info-strip div:nth-child(4) span {
-  color: #111;
-}
-
-.contact-info-strip div:nth-child(4) strong {
-  color: rgba(17, 17, 17, 0.68);
 }
 
 .map-section {
@@ -635,10 +620,6 @@ const faqs = [
     width: 90%;
     min-height: 90px;
     justify-self: center;
-  }
-
-  .contact-info-strip div:nth-child(3) {
-    grid-column: span 1;
   }
 
   .contact-info-strip span {

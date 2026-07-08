@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
 import { works } from '@/data/works'
 import heroVideo from '@/assets/videos/jestenVideo.MP4'
 
@@ -298,6 +299,7 @@ onUnmounted(() => {
         <RouterLink class="secondary-link" to="/works">查看作品</RouterLink>
       </div>
     </div>
+    <FloatingContactButtons />
   </section>
 
   <section class="hero-services-band">

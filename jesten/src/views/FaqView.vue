@@ -1,4 +1,6 @@
 <script setup>
+import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
+
 const faqs = [
   ['估價前需要準備什麼？', '可以先提供施工位置、尺寸、現場照片與想做的項目，方便初步判斷方向。'],
   ['是否需要到現場丈量？', '多數鐵件工程建議現場丈量，才能確認固定方式、尺寸誤差與施工限制。'],
@@ -14,6 +16,7 @@ const faqs = [
     <p class="eyebrow">FAQ</p>
     <h1>常見問題</h1>
     <p>先整理諮詢前常遇到的問題，讓你更快知道要準備哪些資訊。</p>
+    <FloatingContactButtons />
   </section>
 
   <section class="section faq-board">
