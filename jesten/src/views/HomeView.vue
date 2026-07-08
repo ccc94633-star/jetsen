@@ -1012,8 +1012,9 @@ onUnmounted(() => {
 .process-list {
   display: flex;
   gap: 0;
+  width: 100%;
   min-height: 210px;
-  max-width: 1160px;
+  max-width: none;
   margin: 0;
   padding: 0;
   overflow: hidden;

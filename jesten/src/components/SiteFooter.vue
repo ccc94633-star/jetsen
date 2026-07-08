@@ -96,6 +96,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   display: grid;
   grid-column: 3;
   gap: 6px;
+  align-self: center;
   justify-self: end;
   color: #d6d6ce;
   font-style: normal;
@@ -172,7 +173,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     grid-template-rows: 1fr auto;
     gap: 28px;
     align-items: flex-start;
-    min-height: clamp(520px, 102vw, 690px);
+    min-height: clamp(420px, 102vw, 520px);
     padding: 42px clamp(24px, 5.5vw, 38px) 18px;
     background:
       linear-gradient(90deg, rgba(49, 15, 6, 0.95), rgba(76, 25, 10, 0.92) 58%, rgba(49, 15, 6, 0.96)),
@@ -203,7 +204,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     grid-row: auto;
     align-self: center;
     justify-self: center;
-    gap: 20px;
+    gap: 15px;
     text-align: center;
   }
 
@@ -223,14 +224,16 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: min(100%, 326px);
-    min-height: 60px;
+    box-sizing: border-box;
+    width: 180px;
+    max-width: 60%;
+    min-height: 30px;
     margin-top: 10px;
     padding: 12px 18px;
     border: 1px solid rgba(137, 78, 58, 0.72);
     color: #fff;
     background: rgba(60, 24, 14, 0.72);
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: 950;
     line-height: 1.2;
     text-decoration: none;
