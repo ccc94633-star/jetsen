@@ -22,22 +22,22 @@ onBeforeUnmount(() => {
   window.clearInterval(heroInterval)
 })
 
+const phoneHref = 'tel:0981185728'
+const lineHref = 'https://line.me/R/ti/p/@485quazl'
+const mapQuery = '杰森鐵作 台中市太平區長龍路二段626號'
+const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`
+const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
 const contactDetails = [
-  ['電話', '0981-185728'],
-  ['傳真', '04 2277-7868'],
-  ['地址', '台中市太平區長龍路二段626號'],
-  ['官方LINE', '歡迎加入'],
+  { label: '電話', value: '0981-185728', href: phoneHref },
+  { label: '傳真', value: '04 2277-7868' },
+  { label: '地址', value: '台中市太平區長龍路二段626號', href: mapOpenUrl, isExternal: true },
+  { label: '官方LINE', value: '歡迎加入', href: lineHref, isExternal: true },
 ]
 
 const requirements = ['施工項目', '現場照片', '大約尺寸', '施工地點', '希望完工時間']
 const hoveredContactIndex = ref(null)
 const selectedContactIndex = ref(null)
 const activeContactIndex = computed(() => hoveredContactIndex.value ?? selectedContactIndex.value ?? 0)
-const phoneHref = 'tel:0981185728'
-const lineHref = 'https://line.me/R/ti/p/@485quazl'
-const mapQuery = '杰森鐵作 台中市太平區長龍路二段626號'
-const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`
-const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
 
 const faqs = [
   [
@@ -145,9 +145,13 @@ const faqs = [
     </div>
 
     <div class="contact-info-strip" aria-label="聯絡資訊">
-      <div
-        v-for="([label, value], index) in contactDetails"
+      <component
+        :is="href ? 'a' : 'div'"
+        v-for="({ label, value, href, isExternal }, index) in contactDetails"
         :key="label"
+        :href="href"
+        :target="isExternal ? '_blank' : undefined"
+        :rel="isExternal ? 'noreferrer' : undefined"
         :class="{ 'is-active': index === activeContactIndex }"
         tabindex="0"
         @mouseenter="hoveredContactIndex = index"
@@ -158,7 +162,7 @@ const faqs = [
       >
         <span>{{ label }}</span>
         <strong v-if="value">{{ value }}</strong>
-      </div>
+      </component>
     </div>
   </section>
 
@@ -462,7 +466,7 @@ const faqs = [
   border: 0;
 }
 
-.contact-info-strip div {
+.contact-info-strip :is(a, div) {
   position: relative;
   display: grid;
   overflow: hidden;
@@ -474,13 +478,14 @@ const faqs = [
   border-radius: 8px;
   background: #111;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.42);
+  text-decoration: none;
   cursor: pointer;
   transition:
     background 0.25s ease,
     border-color 0.25s ease;
 }
 
-.contact-info-strip div.is-active {
+.contact-info-strip :is(a, div).is-active {
   border-color: rgba(255, 92, 18, 0.72);
   background:
     radial-gradient(circle at 69% 48%, rgba(255, 112, 28, 0.22), transparent 34%),
@@ -616,7 +621,7 @@ const faqs = [
     grid-template-columns: 1fr;
   }
 
-  .contact-info-strip div {
+  .contact-info-strip :is(a, div) {
     width: 90%;
     min-height: 90px;
     justify-self: center;

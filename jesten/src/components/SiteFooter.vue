@@ -307,13 +307,13 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   }
 
   .footer-phonefax span {
-    font-size: clamp(0.75rem, 2.6vw, 1.3rem);
+    font-size: clamp(0.825rem, 2.86vw, 1.43rem);
     white-space: nowrap;
   }
 
   .footer-phonefax .footer-person,
   .footer-contact a {
-    font-size: clamp(0.75rem, 2.6vw, 1.3rem);
+    font-size: clamp(0.825rem, 2.86vw, 1.43rem);
   }
 
   .footer-contact a {
