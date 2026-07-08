@@ -28,10 +28,10 @@
 
 <style scoped>
 .floating-contact {
-  position: absolute;
+  position: fixed;
   top: 50%;
-  right: clamp(14px, 2.8vw, 34px);
-  z-index: 4;
+  right: 20px;
+  z-index: 11;
   display: grid;
   gap: 10px;
   opacity: 0.9;
@@ -112,7 +112,7 @@
   }
 
   .floating-contact__button {
-    width: 37.4px;
+    width: 33.66px;
   }
 }
 </style>

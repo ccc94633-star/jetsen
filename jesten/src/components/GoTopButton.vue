@@ -4,8 +4,9 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const isVisible = ref(false)
-const bottomOffset = ref(24)
-const defaultOffset = 24
+const bottomOffset = ref(15)
+const edgeOffset = 15
+const buttonSize = 32
 
 let frameId = 0
 
@@ -16,11 +17,14 @@ const buttonStyle = computed(() => ({
 function updatePosition() {
   frameId = 0
   const footer = document.querySelector('.site-footer')
-  const footerTop = footer?.getBoundingClientRect().top ?? window.innerHeight
-  const liftAboveFooter = Math.max(defaultOffset, window.innerHeight - footerTop + defaultOffset)
+  const footerRect = footer?.getBoundingClientRect()
+  const isRwd = window.matchMedia('(max-width: 720px)').matches
+  const dockToFooter = isRwd
+    ? window.innerHeight - (footerRect?.top ?? window.innerHeight) - edgeOffset - buttonSize
+    : window.innerHeight - (footerRect?.bottom ?? window.innerHeight) + edgeOffset
 
   isVisible.value = window.scrollY > 260
-  bottomOffset.value = Math.round(liftAboveFooter)
+  bottomOffset.value = Math.round(Math.max(edgeOffset, dockToFooter))
 }
 
 function requestUpdate() {
@@ -79,7 +83,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .go-top-button {
   position: fixed;
-  right: clamp(16px, 3vw, 32px);
+  right: 15px;
   z-index: 12;
   display: grid;
   width: 32px;
@@ -131,7 +135,7 @@ onBeforeUnmount(() => {
 
 @media (max-width: 720px) {
   .go-top-button {
-    right: 16px;
+    right: 15px;
   }
 }
 </style>
