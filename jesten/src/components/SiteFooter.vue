@@ -19,11 +19,12 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     </div>
 
     <address class="footer-contact">
-      <span>陳凱翔</span>
-      <span>台中市太平區長龍路二段626號</span>
       <div class="footer-phonefax">
-        <a href="tel:0981185728">電話：0981-185728</a>
-        <span>傳真：04-2277-7868</span>
+        <span class="footer-person">聯絡人：陳凱翔</span>
+        <a class="footer-line" href="https://line.me/R/ti/p/@485quazl" target="_blank" rel="noreferrer">官方 LINE</a>
+        <a class="footer-phone" href="tel:0981185728">電話：0981-185728</a>
+        <span class="footer-fax">傳真：04-2277-7868</span>
+        <span class="footer-address">台中市太平區長龍路二段626號</span>
       </div>
     </address>
 
@@ -101,7 +102,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   color: #d6d6ce;
   font-style: normal;
   line-height: 1.6;
-  text-align: right;
+  text-align: left;
 }
 
 .footer-phonefax {
@@ -163,7 +164,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   .footer-contact {
     grid-column: 1 / -1;
     justify-self: end;
-    text-align: right;
+    text-align: left;
   }
 }
 
@@ -251,8 +252,8 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   .footer-contact {
     width: 100%;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.45fr);
-    gap: 8px 18px;
+    grid-template-columns: 1fr;
+    gap: 8px;
     align-self: end;
     align-items: end;
     justify-self: end;
@@ -262,21 +263,64 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     text-align: left;
   }
 
-  .footer-contact :nth-child(3) {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+  .footer-phonefax {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    gap: 6px 18px;
+    align-items: end;
+    justify-self: stretch;
+    width: 100%;
   }
 
-  .footer-contact span:nth-child(2),
+  .footer-person {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    justify-self: start;
+  }
+
+  .footer-address {
+    grid-column: 1;
+    grid-row: 3;
+    align-self: start;
+    justify-self: start;
+  }
+
+  .footer-phone,
+  .footer-fax {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .footer-line {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .footer-phone {
+    grid-row: 2;
+  }
+
+  .footer-fax {
+    grid-row: 3;
+  }
+
   .footer-phonefax span {
     font-size: clamp(0.75rem, 2.6vw, 1.3rem);
     white-space: nowrap;
   }
 
+  .footer-phonefax .footer-person,
+  .footer-contact a {
+    font-size: clamp(0.75rem, 2.6vw, 1.3rem);
+  }
+
   .footer-contact a {
     color: #fff;
     font-weight: 400;
-    text-decoration: none;
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
   }
 }
 </style>

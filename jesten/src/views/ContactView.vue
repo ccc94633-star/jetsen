@@ -25,6 +25,7 @@ const contactDetails = [
   ['電話', '0981-185728'],
   ['傳真', '04 2277-7868'],
   ['地址', '台中市太平區長龍路二段626號'],
+  ['官方 LINE', '@485quazl'],
 ]
 
 const requirements = ['施工項目', '現場照片', '大約尺寸', '施工地點', '希望完工時間']
@@ -32,7 +33,7 @@ const hoveredContactIndex = ref(null)
 const selectedContactIndex = ref(null)
 const activeContactIndex = computed(() => hoveredContactIndex.value ?? selectedContactIndex.value ?? 0)
 const phoneHref = 'tel:0981185728'
-const lineHref = 'https://line.me/R/ti/p/@jetsen'
+const lineHref = 'https://line.me/R/ti/p/@485quazl'
 const mapQuery = '杰森鐵作 台中市太平區長龍路二段626號'
 const mapEmbedUrl = `https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&output=embed`
 const mapOpenUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`
