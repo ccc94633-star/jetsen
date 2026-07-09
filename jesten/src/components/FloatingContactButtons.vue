@@ -1,3 +1,7 @@
+<script setup>
+import GoTopButton from './GoTopButton.vue'
+</script>
+
 <template>
   <div class="floating-contact" aria-label="快速聯絡">
     <a
@@ -23,11 +27,15 @@
         />
       </svg>
     </a>
+
+    <GoTopButton embedded />
   </div>
 </template>
 
 <style scoped>
 .floating-contact {
+  --floating-contact-button-size: clamp(36.8px, 3.36vw, 46.4px);
+
   position: fixed;
   top: 50%;
   right: 20px;
@@ -40,7 +48,7 @@
 
 .floating-contact__button {
   display: grid;
-  width: clamp(46px, 4.2vw, 58px);
+  width: var(--floating-contact-button-size);
   aspect-ratio: 1;
   place-items: center;
   border: 1px solid rgba(255, 90, 18, 0.58);
@@ -83,7 +91,7 @@
   border-radius: 50%;
   color: #06c755;
   background: #fff;
-  font-size: clamp(0.52rem, 0.72vw, 0.68rem);
+  font-size: clamp(0.416rem, 0.576vw, 0.544rem);
   font-weight: 950;
   line-height: 1;
 }

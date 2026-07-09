@@ -4,13 +4,29 @@ import { RouterLink, useRoute } from 'vue-router'
 import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
 import ScrollDownButton from '@/components/ScrollDownButton.vue'
 import { findWorkBySlug, works } from '@/data/works'
+import { getPublishedWorks } from '@/services/worksService'
 
 const route = useRoute()
-const work = computed(() => findWorkBySlug(route.params.slug) ?? works[0])
-const relatedWorks = computed(() => works.filter((item) => item.slug !== work.value.slug).slice(0, 3))
+const allWorks = ref(works)
+const work = computed(() => allWorks.value.find((item) => item.slug === route.params.slug) ?? findWorkBySlug(route.params.slug) ?? works[0])
+const relatedWorks = computed(() => allWorks.value.filter((item) => item.slug !== work.value.slug).slice(0, 3))
 const activeImage = ref(null)
 const selectedServiceIndex = ref(null)
 const hoveredServiceIndex = ref(null)
+
+const initialGalleryCount = 12
+const loadMoreGalleryCount = 20
+const visibleGalleryCount = ref(initialGalleryCount)
+const visibleGallery = computed(() => work.value.gallery?.slice(0, visibleGalleryCount.value) ?? [])
+const hasMoreGallery = computed(() => (work.value.gallery?.length ?? 0) > visibleGalleryCount.value)
+
+const showMoreGallery = () => {
+  visibleGalleryCount.value += loadMoreGalleryCount
+}
+
+watch(() => work.value.slug, () => {
+  visibleGalleryCount.value = initialGalleryCount
+})
 
 const scopeTrack = ref(null)
 const isScopeDragging = ref(false)
@@ -205,6 +221,8 @@ const scopeDescriptions = {
 
 const activeScopeDescriptions = computed(() => scopeDescriptions[work.value.slug] ?? work.value.services.map(() => work.value.detail))
 const activeServiceIndex = computed(() => hoveredServiceIndex.value ?? selectedServiceIndex.value ?? 0)
+const hasServices = computed(() => Boolean(work.value.services?.length))
+const hasGallery = computed(() => Boolean(work.value.gallery?.length))
 
 const closeLightbox = () => {
   activeImage.value = null
@@ -231,6 +249,14 @@ onMounted(() => {
 
   scopeViewportHighlight.refresh()
   window.addEventListener('resize', scopeViewportHighlight.refresh)
+
+  getPublishedWorks().then((items) => {
+    allWorks.value = items
+    nextTick(() => {
+      updateRelatedPagination()
+      scopeViewportHighlight.refresh()
+    })
+  })
 })
 
 onBeforeUnmount(() => {
@@ -258,7 +284,7 @@ onBeforeUnmount(() => {
       <ScrollDownButton />
     </section>
 
-    <section class="section service-block">
+    <section v-if="hasServices" class="section service-block">
       <div class="section-heading">
         <p class="eyebrow">Scope</p>
         <h2>{{ work.title }}施作範圍</h2>
@@ -304,8 +330,8 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="photo-grid">
-        <figure v-for="(image, index) in work.gallery" :key="`${work.slug}-${index}`">
+      <div v-if="hasGallery" class="photo-grid">
+        <figure v-for="(image, index) in visibleGallery" :key="`${work.slug}-${index}`">
           <button
             type="button"
             :aria-label="`查看${work.title}作品照片 ${index + 1}`"
@@ -314,6 +340,15 @@ onBeforeUnmount(() => {
             <img :src="image" :alt="`${work.title}作品照片 ${index + 1}`" loading="lazy" />
           </button>
         </figure>
+        <figure v-if="hasMoreGallery" class="photo-grid-more">
+          <button type="button" @click="showMoreGallery">
+            <span>查看更多</span>
+          </button>
+        </figure>
+      </div>
+      <div v-else class="empty-gallery">
+        <strong>尚未上傳作品照片</strong>
+        <p>這個分類已建立，照片上傳後會顯示在這裡。</p>
       </div>
     </section>
 
@@ -874,6 +909,81 @@ onBeforeUnmount(() => {
 
 .photo-grid figure:hover img {
   transform: scale(1.04);
+}
+
+.photo-grid figure.photo-grid-more {
+  display: flex;
+  grid-row: auto;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+}
+
+.photo-grid-more button {
+  display: inline-flex;
+  width: auto;
+  height: auto;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border: 1px dashed rgba(255, 90, 18, 0.58);
+  border-radius: 0;
+  color: #fff;
+  background:
+    radial-gradient(circle at 30% 16%, rgba(255, 176, 96, 0.24), transparent 42%),
+    linear-gradient(145deg, rgba(28, 18, 14, 0.94), rgba(10, 10, 10, 0.94));
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.photo-grid-more button:hover,
+.photo-grid-more button:focus-visible {
+  border-color: rgba(255, 122, 50, 0.95);
+  outline: none;
+  background:
+    radial-gradient(circle at 30% 16%, rgba(255, 190, 110, 0.34), transparent 42%),
+    linear-gradient(145deg, rgba(42, 24, 16, 0.98), rgba(18, 18, 18, 0.98));
+  transform: translateY(-2px);
+}
+
+.photo-grid-more span {
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.empty-gallery {
+  display: grid;
+  min-height: 260px;
+  max-width: 1180px;
+  place-items: center;
+  margin-inline: auto;
+  padding: 36px;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background:
+    linear-gradient(145deg, rgba(255, 90, 18, 0.1), transparent 46%),
+    #101010;
+  text-align: center;
+}
+
+.empty-gallery strong {
+  color: #fff;
+  font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.empty-gallery p {
+  margin: 8px 0 0;
+  color: #aaa;
+  font-size: 1rem;
 }
 
 .lightbox {

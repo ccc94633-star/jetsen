@@ -1,7 +1,8 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
 import { works } from '@/data/works'
+import { getPublishedWorks } from '@/services/worksService'
 import heroVideo from '@/assets/videos/jestenVideo.MP4'
 
 const serviceCards = [
@@ -37,7 +38,7 @@ const serviceCards = [
   },
 ]
 
-const workCategories = works
+const workCategories = ref(works)
 const serviceTrack = ref(null)
 const projectTrack = ref(null)
 const processTrack = ref(null)
@@ -263,7 +264,9 @@ const processViewportHighlight = createViewportHighlight(
   '(max-width: 980px)',
 )
 
-onMounted(() => {
+onMounted(async () => {
+  workCategories.value = await getPublishedWorks()
+  await nextTick()
   updateProjectPagination()
   window.addEventListener('resize', updateProjectPagination)
 

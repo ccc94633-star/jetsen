@@ -22,15 +22,15 @@ const galleryModules = {
   }),
 }
 
-const gallery = (key, coverImage, limit = 12) => [
+const gallery = (key, coverImage) => [
   coverImage,
   ...Object.entries(galleryModules[key])
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([, image]) => image)
     .filter((image) => image !== coverImage),
-].slice(0, limit)
+]
 
-export const works = [
+export const fullWorks = [
   {
     slug: 'canopy',
     title: '採光罩',
@@ -104,5 +104,7 @@ export const works = [
     gallery: gallery('invisibleGrilles', invisibleGrilleImage),
   },
 ]
+
+export const works = fullWorks
 
 export const findWorkBySlug = (slug) => works.find((work) => work.slug === slug)

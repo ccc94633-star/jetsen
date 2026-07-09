@@ -4,23 +4,26 @@ import { RouterLink } from 'vue-router'
 import FloatingContactButtons from '@/components/FloatingContactButtons.vue'
 import ScrollDownButton from '@/components/ScrollDownButton.vue'
 import { works } from '@/data/works'
+import { getPublishedWorks } from '@/services/worksService'
 
-const heroImages = works.map((work) => work.coverImage)
+const categories = ref(works)
+const heroImages = computed(() => categories.value.map((work) => work.coverImage).filter(Boolean))
 const activeHeroImageIndex = ref(0)
-const activeHeroImage = computed(() => heroImages[activeHeroImageIndex.value])
+const activeHeroImage = computed(() => heroImages.value[activeHeroImageIndex.value])
 let heroInterval
 
-onMounted(() => {
+onMounted(async () => {
+  categories.value = await getPublishedWorks()
+
   heroInterval = window.setInterval(() => {
-    activeHeroImageIndex.value = (activeHeroImageIndex.value + 1) % heroImages.length
+    if (!heroImages.value.length) return
+    activeHeroImageIndex.value = (activeHeroImageIndex.value + 1) % heroImages.value.length
   }, 3600)
 })
 
 onBeforeUnmount(() => {
   window.clearInterval(heroInterval)
 })
-
-const categories = works
 
 const scrollToCategory = (slug) => {
   document.getElementById(`work-${slug}`)?.scrollIntoView({

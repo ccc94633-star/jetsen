@@ -1,17 +1,22 @@
 <script setup>
+import { computed } from 'vue'
 import { RouterView } from 'vue-router'
+import { useRoute } from 'vue-router'
 import GoTopButton from './components/GoTopButton.vue'
 import SiteFooter from './components/SiteFooter.vue'
 import SiteHeader from './components/SiteHeader.vue'
+
+const route = useRoute()
+const isAdminLayout = computed(() => route.meta.layout === 'admin')
 </script>
 
 <template>
-  <SiteHeader />
+  <SiteHeader v-if="!isAdminLayout" />
   <main>
     <RouterView />
   </main>
-  <SiteFooter />
-  <GoTopButton />
+  <SiteFooter v-if="!isAdminLayout" />
+  <GoTopButton v-if="!isAdminLayout" />
 </template>
 
 <style>

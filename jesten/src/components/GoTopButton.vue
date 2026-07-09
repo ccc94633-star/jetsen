@@ -2,6 +2,13 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+const props = defineProps({
+  embedded: {
+    type: Boolean,
+    default: false,
+  },
+})
+
 const route = useRoute()
 const isVisible = ref(false)
 const bottomOffset = ref(15)
@@ -11,11 +18,15 @@ const buttonSize = 32
 let frameId = 0
 
 const buttonStyle = computed(() => ({
-  bottom: `${bottomOffset.value}px`,
+  ...(props.embedded ? {} : { bottom: `${bottomOffset.value}px` }),
 }))
 
 function updatePosition() {
   frameId = 0
+  isVisible.value = window.scrollY > 260
+
+  if (props.embedded) return
+
   const footer = document.querySelector('.site-footer')
   const footerRect = footer?.getBoundingClientRect()
   const isRwd = window.matchMedia('(max-width: 720px)').matches
@@ -23,7 +34,6 @@ function updatePosition() {
     ? window.innerHeight - (footerRect?.top ?? window.innerHeight) - edgeOffset - buttonSize
     : window.innerHeight - (footerRect?.bottom ?? window.innerHeight) + edgeOffset
 
-  isVisible.value = window.scrollY > 260
   bottomOffset.value = Math.round(Math.max(edgeOffset, dockToFooter))
 }
 
@@ -67,7 +77,7 @@ onBeforeUnmount(() => {
   <Transition name="go-top">
     <button
       v-show="isVisible"
-      class="go-top-button"
+      :class="['go-top-button', embedded ? 'go-top-button--embedded' : 'go-top-button--standalone']"
       type="button"
       :style="buttonStyle"
       aria-label="回到頁面頂端"
@@ -75,26 +85,40 @@ onBeforeUnmount(() => {
       @click="scrollToTop"
       @focus="requestUpdate"
     >
-      <span aria-hidden="true">↑</span>
+      <svg class="go-top-icon" viewBox="0 0 48 48" aria-hidden="true">
+        <path class="go-top-icon__bar" d="M10 3h28v5H10z" />
+        <path class="go-top-icon__arrow" d="M24 12 7 30h11v15h12V30h11L24 12Z" />
+      </svg>
     </button>
   </Transition>
 </template>
 
 <style scoped>
 .go-top-button {
-  position: fixed;
-  right: 15px;
   z-index: 12;
   display: grid;
   width: 32px;
   height: 32px;
   place-items: center;
-  border: 1px solid var(--color-accent);
+  border: 1px solid rgba(255, 90, 18, 0.58);
   border-radius: 0;
   color: #fff;
-  background: rgba(12, 12, 12, 0.92);
-  box-shadow: none;
+  background:
+    radial-gradient(circle at 30% 16%, rgba(255, 176, 96, 0.24), transparent 42%),
+    linear-gradient(145deg, rgba(28, 18, 14, 0.94), rgba(10, 10, 10, 0.94));
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
   cursor: pointer;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.go-top-button--standalone {
+  position: fixed;
+  right: 15px;
   transition:
     bottom 0.18s ease,
     background 0.18s ease,
@@ -102,16 +126,32 @@ onBeforeUnmount(() => {
     transform 0.18s ease;
 }
 
-.go-top-button span {
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1;
+.go-top-button--embedded {
+  position: static;
+  width: var(--floating-contact-button-size, 32px);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.go-top-icon {
+  width: 64%;
+  height: 64%;
+}
+
+.go-top-icon__bar {
+  fill: rgba(255, 245, 235, 0.74);
+}
+
+.go-top-icon__arrow {
+  fill: #ff7a32;
 }
 
 .go-top-button:hover,
 .go-top-button:focus-visible {
-  border-color: #ff7a32;
-  background: rgba(22, 22, 22, 0.96);
+  border-color: rgba(255, 122, 50, 0.95);
+  background:
+    radial-gradient(circle at 30% 16%, rgba(255, 190, 110, 0.34), transparent 42%),
+    linear-gradient(145deg, rgba(42, 24, 16, 0.98), rgba(18, 18, 18, 0.98));
   transform: translateY(-2px);
 }
 
@@ -133,9 +173,19 @@ onBeforeUnmount(() => {
   transform: translateY(8px);
 }
 
+@media (min-width: 721px) {
+  .go-top-button--standalone {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
-  .go-top-button {
+  .go-top-button--standalone {
     right: 15px;
+  }
+
+  .go-top-button--embedded {
+    display: none;
   }
 }
 </style>
