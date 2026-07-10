@@ -123,6 +123,10 @@ let authSubscription
 onMounted(() => {
   if (!hasSupabaseConfig) return
 
+  if (route.query.mode === 'reset') {
+    setMode('update-password')
+  }
+
   const { data } = supabase.auth.onAuthStateChange((event) => {
     if (event === 'PASSWORD_RECOVERY') {
       setMode('update-password')
