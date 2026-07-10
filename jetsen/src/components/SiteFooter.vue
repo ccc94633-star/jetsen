@@ -1,8 +1,9 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import footerBackground from '@/assets/images/brand/jetsen-og-background.jpg'
-import footerLogo from '@/assets/images/brand/jetsen-wordmark-orange-transparent.png'
-import footerWatermark from '@/assets/images/brand/jetsen-wordmark-orange-transparent.png'
+import footerLogo from '@/assets/images/brand/jetsen-wordmark-orange-transparent-with-cn.png'
+import footerSideLogo from '@/assets/images/brand/jetsen-wordmark-white.png'
+import footerWatermark from '@/assets/images/brand/jetsen-wordmark-white.png'
 
 const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩', '快速捲門', '設計師鐵件', '打造你的專屬鐵件']
 </script>
@@ -11,6 +12,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   <footer class="site-footer">
     <img class="footer-background-logo" :src="footerBackground" alt="" aria-hidden="true" />
     <img class="footer-watermark" :src="footerWatermark" alt="" aria-hidden="true" />
+    <img class="footer-watermark-side" :src="footerSideLogo" alt="" aria-hidden="true" />
 
     <div class="footer-services" aria-label="服務項目">
       <span v-for="service in services" :key="service">{{ service }}</span>
@@ -54,23 +56,27 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
 
 .footer-watermark {
   position: absolute;
-  right: clamp(-120px, -6vw, -32px);
-  bottom: -24px;
-  z-index: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
   width: min(68vw, 740px);
-  opacity: 0.1;
+  opacity: 0.055;
+  filter: grayscale(1) invert(1) brightness(0.86) contrast(0.82);
   pointer-events: none;
+  transform: translate(16%, 40%);
+  transform-origin: right bottom;
 }
 
 .footer-background-logo {
+  display: none;
+}
+
+.footer-watermark-side {
+  display: none;
   position: absolute;
-  inset: 0;
   z-index: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.18;
   pointer-events: none;
+  filter: grayscale(1);
 }
 
 .site-footer::after {
@@ -122,6 +128,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   font-style: normal;
   line-height: 1.6;
   text-align: left;
+  transform: translateX(25px);
 }
 
 .footer-phonefax {
@@ -141,6 +148,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   align-items: flex-start;
   justify-self: start;
   text-align: left;
+  transform: translateX(-25px);
 }
 
 .footer-services span {
@@ -173,6 +181,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   .footer-services {
     grid-column: 1;
     grid-row: auto;
+    transform: translateX(-25px);
   }
 
   .footer-brand {
@@ -184,6 +193,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     grid-column: 1 / -1;
     justify-self: end;
     text-align: left;
+    transform: translateX(25px);
   }
 }
 
@@ -201,15 +211,24 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   }
 
   .footer-watermark {
-    right: -34vw;
-    bottom: 36%;
-    width: 130vw;
+    display: none;
+  }
+
+  .footer-watermark-side {
+    display: block;
+    top: 48%;
+    width: clamp(360px, 96vw, 520px);
+    right: calc(5px - (clamp(360px, 96vw, 520px) / 2));
+    height: auto;
     max-width: none;
-    opacity: 0.14;
+    opacity: 0.58;
+    filter: grayscale(1) invert(1) brightness(0.86) contrast(0.82);
+    transform: translateY(-50%) rotate(90deg);
+    transform-origin: center;
   }
 
   .footer-background-logo {
-    opacity: 0.2;
+    display: none;
   }
 
   .footer-contact,
@@ -217,6 +236,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   .footer-brand,
   .footer-link {
     grid-column: auto;
+    transform: none;
     
   }
 
@@ -229,12 +249,12 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     grid-row: auto;
     align-self: center;
     justify-self: center;
-    gap: 15px;
+    gap: 5px;
     text-align: center;
   }
 
   .footer-logo {
-    width: min(74vw, 280px);
+    width: min(66.6vw, 252px);
   }
 
   .footer-link {
@@ -245,12 +265,12 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
     width: 180px;
     max-width: 60%;
     min-height: 30px;
-    margin-top: 10px;
-    padding: 12px 18px;
+    margin-top: 5px;
+    padding: 6px 9px;
     border: 1px solid rgba(137, 78, 58, 0.72);
     color: #fff;
     background: rgba(60, 24, 14, 0.72);
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 950;
     line-height: 1.2;
     text-decoration: none;

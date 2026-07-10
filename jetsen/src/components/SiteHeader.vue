@@ -1,10 +1,10 @@
 <script setup>
 import { RouterLink } from 'vue-router'
-import founderLogo from '@/assets/images/brand/jetsen-wordmark-orange-transparent.png'
+import founderLogo from '@/assets/images/brand/jetsen-wordmark-orange-transparent-with-cn.png'
 
 const navItems = [
   { label: '首頁', to: '/' },
-  { label: '工程作品', to: '/works' },
+  { label: '杰森作品', to: '/works' },
   { label: '品牌故事', to: '/story' },
   { label: '聯絡諮詢', to: '/contact' },
 ]
@@ -23,3 +23,9 @@ const navItems = [
     </nav>
   </header>
 </template>
+
+<style scoped>
+.brand-logo {
+  transform: translateX(-8px);
+}
+</style>

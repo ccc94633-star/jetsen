@@ -24,7 +24,7 @@ The project is primarily a static marketing and portfolio website. Only add `api
 - Production build: `npm run build`
 - Preview build: `npm run preview`
 
-Run commands from the `jesten/` project directory.
+Run commands from the `jetsen/` project directory.
 
 ## Collaboration Mode
 
