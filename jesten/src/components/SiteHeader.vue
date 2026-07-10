@@ -1,5 +1,6 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import founderLogo from '@/assets/images/brand/jetsen-wordmark-orange-transparent.png'
 
 const navItems = [
   { label: '首頁', to: '/' },
@@ -12,8 +13,7 @@ const navItems = [
 <template>
   <header class="site-header">
     <RouterLink class="brand" to="/" aria-label="杰森鐵作首頁">
-      <span class="brand-mark">JETSEN</span>
-      <span class="brand-name">杰森鐵作</span>
+      <img class="brand-logo" :src="founderLogo" alt="JETSEN" />
     </RouterLink>
 
     <nav aria-label="主要導覽">

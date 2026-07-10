@@ -1,20 +1,23 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import footerBackground from '@/assets/images/brand/jetsen-og-background.jpg'
+import footerLogo from '@/assets/images/brand/jetsen-wordmark-orange-transparent.png'
+import footerWatermark from '@/assets/images/brand/jetsen-wordmark-orange-transparent.png'
 
 const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩', '快速捲門', '設計師鐵件', '打造你的專屬鐵件']
 </script>
 
 <template>
   <footer class="site-footer">
-    <span class="footer-watermark" aria-hidden="true">JETSEN</span>
+    <img class="footer-background-logo" :src="footerBackground" alt="" aria-hidden="true" />
+    <img class="footer-watermark" :src="footerWatermark" alt="" aria-hidden="true" />
 
     <div class="footer-services" aria-label="服務項目">
       <span v-for="service in services" :key="service">{{ service }}</span>
     </div>
 
     <div class="footer-brand">
-      <p class="footer-logo">JETSEN</p>
-      <p>杰森鐵作</p>
+      <img class="footer-logo" :src="footerLogo" alt="JETSEN" />
       <RouterLink class="footer-link" to="/contact">打造你的專屬鐵件</RouterLink>
     </div>
 
@@ -44,21 +47,38 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   border-top: 1px solid var(--color-line);
   color: #f8f8f4;
   background:
-    radial-gradient(ellipse at 48% 118%, rgba(255, 90, 18, 0.2), transparent 34rem),
-    radial-gradient(ellipse at 92% 0%, rgba(144, 40, 16, 0.18), transparent 28rem),
-    linear-gradient(145deg, rgba(18, 9, 6, 0.92), rgba(5, 5, 5, 0.96));
+    radial-gradient(ellipse at 48% 118%, rgba(255, 90, 18, 0.16), transparent 34rem),
+    linear-gradient(90deg, rgba(4, 4, 4, 0.96), rgba(22, 8, 4, 0.94) 52%, rgba(5, 5, 5, 0.98)),
+    #050505;
 }
 
 .footer-watermark {
   position: absolute;
-  right: clamp(16px, 5vw, 72px);
-  bottom: -20px;
+  right: clamp(-120px, -6vw, -32px);
+  bottom: -24px;
   z-index: 0;
-  color: rgba(255, 255, 255, 0.055);
-  font-size: clamp(4.5rem, 14vw, 12rem);
-  font-style: italic;
-  font-weight: 950;
-  line-height: 0.8;
+  width: min(68vw, 740px);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.footer-background-logo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.site-footer::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(90deg, rgba(5, 5, 5, 0.9), rgba(10, 5, 3, 0.72) 48%, rgba(5, 5, 5, 0.92));
+  content: '';
   pointer-events: none;
 }
 
@@ -67,7 +87,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
 .footer-services,
 .footer-link {
   position: relative;
-  z-index: 1;
+  z-index: 2;
 }
 
 .site-footer p,
@@ -76,10 +96,9 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
 }
 
 .footer-logo {
-  color: var(--color-accent);
-  font-size: 1.7rem;
-  font-style: italic;
-  font-weight: 950;
+  display: block;
+  width: min(38vw, 300px);
+  height: auto;
 }
 
 .footer-brand {
@@ -182,10 +201,15 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   }
 
   .footer-watermark {
-    right: -0.2em;
-    bottom: 0.65em;
-    font-size: clamp(8rem, 36vw, 15rem);
-    opacity: 0.18;
+    right: -34vw;
+    bottom: 36%;
+    width: 130vw;
+    max-width: none;
+    opacity: 0.14;
+  }
+
+  .footer-background-logo {
+    opacity: 0.2;
   }
 
   .footer-contact,
@@ -210,15 +234,7 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
   }
 
   .footer-logo {
-    font-size: clamp(2.35rem, 8vw, 2.7rem);
-    line-height: 1;
-  }
-
-  .footer-brand p:not(.footer-logo) {
-    color: #fff;
-    font-size: clamp(1.35rem, 4.8vw, 1.62rem);
-    font-weight: 800;
-    line-height: 1.2;
+    width: min(74vw, 280px);
   }
 
   .footer-link {

@@ -1,6 +1,6 @@
 <script setup>
 import imageCompression from 'browser-image-compression'
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { fullWorks as localWorks } from '@/data/works'
 import { hasSupabaseConfig, supabase } from '@/lib/supabase'
@@ -13,6 +13,7 @@ const photos = ref([])
 const selectedCategoryId = ref('')
 const selectedFiles = ref([])
 const searchTerm = ref('')
+const photoSectionRef = ref(null)
 const uploadSummaries = ref([])
 const panel = ref('')
 const newCategoryTitle = ref('')
@@ -231,13 +232,25 @@ const loadAdminData = async () => {
   editCategoryTitle.value = selectedCategory.value?.title ?? ''
 }
 
-const selectCategory = (categoryId) => {
+const scrollToPhotoSection = async () => {
+  await nextTick()
+  photoSectionRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}
+
+const selectCategory = (categoryId, shouldScroll = false) => {
   selectedCategoryId.value = categoryId
   editCategoryTitle.value = categories.value.find((category) => category.id === categoryId)?.title ?? ''
   selectedFiles.value = []
   uploadSummaries.value = []
   panel.value = ''
   clearFeedback()
+
+  if (shouldScroll) {
+    scrollToPhotoSection()
+  }
 }
 
 const slugify = (value) => {
@@ -554,19 +567,22 @@ onMounted(async () => {
         <div class="category-tabs" aria-label="作品分類">
           <button
             type="button"
+            class="category-tab-all"
             :class="{ active: isAllSelected }"
-            @click="selectCategory('')"
+            @click="selectCategory('', true)"
           >
-            全部（{{ totalPhotoCount }} 張）
+            <span class="category-tab-label">全部</span>
+            <span class="category-tab-count">（{{ totalPhotoCount }} 張）</span>
           </button>
           <button
             v-for="category in categories"
             :key="category.id"
             type="button"
             :class="{ active: category.id === selectedCategoryId }"
-            @click="selectCategory(category.id)"
+            @click="selectCategory(category.id, true)"
         >
-          {{ category.title }}（{{ getCategoryPhotoCount(category.id) }} 張）
+          <span class="category-tab-label">{{ category.title }}</span>
+          <span class="category-tab-count">（{{ getCategoryPhotoCount(category.id) }} 張）</span>
         </button>
       </div>
 
@@ -642,15 +658,24 @@ onMounted(async () => {
       <section class="feedback-stack" aria-live="polite">
         <p v-if="statusMessage" class="status-message">{{ statusMessage }}</p>
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-        <div v-if="successMessage" class="success-message">
+        <a
+          v-if="successMessage && successHref"
+          class="success-message success-message-link"
+          :href="successHref"
+          target="_blank"
+          rel="noopener"
+        >
           <span>{{ successMessage }}</span>
-          <a v-if="successHref" :href="successHref" target="_blank" rel="noopener">點此查看</a>
+          <span class="success-message-action">點此查看</span>
+        </a>
+        <div v-else-if="successMessage" class="success-message">
+          <span>{{ successMessage }}</span>
         </div>
         <p v-if="isLoading" class="status-message">讀取中...</p>
       </section>
 
       <Transition name="photo-slide">
-        <div v-if="!isLoading" class="photo-section">
+        <div v-if="!isLoading" ref="photoSectionRef" class="photo-section">
           <section class="photo-board" aria-label="照片方格管理">
             <label v-if="selectedCategory" class="photo-tile upload-tile" for="admin-photo-upload">
               <input id="admin-photo-upload" type="file" accept="image/*" multiple @change="handleFiles" />
@@ -662,17 +687,26 @@ onMounted(async () => {
             <article v-for="photo in filteredPhotos" :key="photo.id" class="photo-tile photo-card">
               <img :src="photo.image_url" :alt="photo.alt_text || '作品照片'" />
               <div class="photo-badges">
-                <span v-if="photo.is_cover">封面</span>
+                <span v-if="photo.is_cover">設為封面</span>
                 <span :class="{ muted: !photo.is_published }">
                   {{ photo.is_published ? '已發布' : '已隱藏' }}
                 </span>
               </div>
+              <button
+                type="button"
+                class="photo-delete"
+                :disabled="photo.is_local_preview"
+                aria-label="刪除照片"
+                data-tooltip="刪除"
+                @click="deletePhoto(photo)"
+              >
+                ×
+              </button>
               <div class="photo-actions">
-                <button type="button" :disabled="photo.is_cover || photo.is_local_preview" @click="setCover(photo)">封面</button>
+                <button type="button" :disabled="photo.is_cover || photo.is_local_preview" @click="setCover(photo)">設為封面</button>
                 <button type="button" :disabled="photo.is_local_preview" @click="togglePublished(photo)">
-                  {{ photo.is_published ? '隱藏' : '發布' }}
+                  {{ photo.is_published ? '隱藏圖片' : '取消隱藏' }}
                 </button>
-                <button type="button" class="button-danger" :disabled="photo.is_local_preview" @click="deletePhoto(photo)">刪除</button>
               </div>
             </article>
 
@@ -775,7 +809,7 @@ input {
 .category-actions button,
 .category-form button,
 .delete-category-panel button,
-.success-message a,
+.success-message-action,
 .upload-submit,
 .photo-actions button {
   min-height: 46px;
@@ -798,7 +832,7 @@ input {
 .category-actions button:hover,
 .category-form button:hover,
 .delete-category-panel button:hover,
-.success-message a:hover,
+.success-message-link:hover .success-message-action,
 .upload-submit:hover,
 .photo-actions button:hover {
   border-color: rgba(255, 90, 18, 0.62);
@@ -865,10 +899,14 @@ input {
     background 180ms ease;
 }
 
+.category-tab-count {
+  white-space: nowrap;
+}
+
 .category-tabs button.active,
 .category-actions button.active,
 .category-form button,
-.success-message a,
+.success-message-action,
 .upload-submit {
   border-color: transparent;
   background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
@@ -982,14 +1020,18 @@ input {
   background: #10200d;
 }
 
-.success-message a {
+.success-message-link {
+  text-decoration: none;
+}
+
+.success-message-action {
   display: inline-flex;
   align-items: center;
-  text-decoration: none;
 }
 
 .photo-section {
   overflow: hidden;
+  scroll-margin-top: 16px;
 }
 
 .photo-slide-enter-active,
@@ -1122,7 +1164,7 @@ input {
   position: absolute;
   top: 5px;
   left: 5px;
-  right: 5px;
+  right: 34px;
   flex-wrap: wrap;
   gap: 4px;
 }
@@ -1138,6 +1180,75 @@ input {
 
 .photo-badges span.muted {
   background: rgba(20, 20, 20, 0.86);
+}
+
+.photo-delete {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(20, 20, 20, 0.75);
+  cursor: pointer;
+  font-size: 1.5rem;
+  line-height: 1;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease,
+    background 160ms ease;
+}
+
+.photo-delete:hover {
+  background: rgba(240, 68, 10, 0.92);
+}
+
+.photo-delete:disabled {
+  cursor: not-allowed;
+}
+
+.photo-card:hover .photo-delete,
+.photo-card:focus-within .photo-delete {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.photo-card:hover .photo-delete:disabled,
+.photo-card:focus-within .photo-delete:disabled {
+  opacity: 0.5;
+}
+
+.photo-delete::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  padding: 4px 9px;
+  border: 1px solid rgba(255, 90, 18, 0.32);
+  border-radius: 6px;
+  background: #171717;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 900;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.photo-delete:hover::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .photo-actions {
@@ -1160,11 +1271,11 @@ input {
 }
 
 .photo-actions button {
-  min-height: 24px;
+  min-height: 34px;
   flex: 1 1 0;
-  padding: 3px 4px;
+  padding: 6px 8px;
   border-radius: 4px;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
 }
 
 .photo-actions button:disabled {
@@ -1243,6 +1354,32 @@ input {
     justify-content: flex-start;
   }
 
+  .category-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow-x: visible;
+  }
+
+  .category-tabs button {
+    min-width: 0;
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .category-tab-label,
+  .category-tab-count {
+    display: block;
+  }
+
+  .category-tab-count {
+    margin-top: 2px;
+  }
+
+  .category-tab-all {
+    grid-column: 1 / -1;
+  }
+
   .photo-board {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
@@ -1254,17 +1391,38 @@ input {
     aspect-ratio: 1;
   }
 
+  .photo-tile.photo-card {
+    aspect-ratio: auto;
+    padding-bottom: 50px;
+  }
+
   .photo-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     opacity: 1;
     transform: none;
   }
 
-  .photo-card {
-    aspect-ratio: auto;
+  .photo-actions button {
+    min-height: 42px;
+    padding: 8px 6px;
+    font-size: 0.82rem;
+  }
+
+  .photo-delete {
+    width: 30px;
+    height: 30px;
+    opacity: 1;
+    transform: none;
+  }
+
+  .photo-delete:disabled {
+    opacity: 0.5;
   }
 
   .photo-card img {
-    height: 100%;
+    aspect-ratio: 1;
+    height: auto;
   }
 }
 </style>

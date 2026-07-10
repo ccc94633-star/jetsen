@@ -33,24 +33,36 @@ onBeforeUnmount(() => {
 
 const founderPrinciples = [
   {
-    title: '現場判斷',
-    text: '每一件工程先回到現場條件，確認結構、動線、固定方式與日常使用情境。',
+    title: '先聽懂空間',
+    text: '真正的工藝始於溝通。施工前反覆確認尺寸、結構、動線與設計意圖，讓鐵件自然融入空間。',
   },
   {
-    title: '安全優先',
-    text: '從材料厚度、焊接補強到安裝收邊，都以長期穩定與使用安全作為基準。',
+    title: '把基本做到深',
+    text: '從材料厚度、焊接補強到拋光收邊，每一道工序都回到安全、耐用與長期使用的穩定度。',
   },
   {
-    title: '細節收尾',
-    text: '把看得見與看不見的地方都處理好，讓作品不只完工，也能經得起時間。',
+    title: '作品由自己負責',
+    text: '不以案子大小區分用心程度。每件從廠區出去的成品，都代表杰森鐵作對品質的承諾。',
   },
 ]
 
-const storyPlaceholders = [
-  '創業起點',
-  '第一個關鍵案場',
-  '團隊與工法成形',
-  '下一階段的 JETSEN',
+const storyMilestones = [
+  {
+    title: '從家族鐵工廠扎根',
+    text: '創辦人累積扎實西工底子，也看見傳統加工需要更貼近空間與人的使用感受。',
+  },
+  {
+    title: '疫情期間創立杰森鐵作',
+    text: '帶著對作品完全負責的信念，在資源有限的時候踏出創業第一步。',
+  },
+  {
+    title: '從各式小工程磨出底氣',
+    text: '雞舍搭建、微型修繕、低利潤案場都親自做，讓現場經驗成為最穩的養分。',
+  },
+  {
+    title: '走向空間鐵作美學',
+    text: '與設計師、業主協作，把傳統黑手技術轉化為現代空間需要的精準與溫度。',
+  },
 ]
 </script>
 
@@ -68,10 +80,10 @@ const storyPlaceholders = [
 
     <div class="hero-founder">
       <div class="hero-copy">
-        <p class="eyebrow">Founder</p>
-        <h1>從現場開始，把金屬工程做到讓人放心。</h1>
+        <p class="eyebrow">Founder Story</p>
+        <h1>傳承西工硬底子，走出有溫度的鐵作美學。</h1>
         <p>
-          JETSEN 的故事，先從創辦人對施工品質的要求開始。每一次丈量、每一道焊接、每一處收邊，都是為了讓作品真正貼合現場，也貼近日常使用。
+          杰森鐵作源自傳統鐵工的淬鍊，也來自創辦人對制式加工的反思。鐵件不該只是完成尺寸，更要與空間對話，承載使用者對安全、質感與生活的期待。
         </p>
         <div class="hero-actions">
           <RouterLink class="primary-link" to="/contact">聯絡諮詢</RouterLink>
@@ -87,19 +99,19 @@ const storyPlaceholders = [
     <div class="founder-intro">
       <div>
         <p class="eyebrow">Point of View</p>
-        <h2>創辦人重視的，不只是完成工程，而是讓客戶長期安心使用。</h2>
+        <h2>把冷冰冰的金屬，做成能被信任的作品。</h2>
       </div>
       <p>
-        金屬工程很吃現場經驗。尺寸、材質、固定點、排水、收邊、開闔手感，每個判斷都會影響完工後的使用狀態。這也是 JETSEN 持續把溝通、丈量與施工細節放在前面的原因。
+        創業初期，杰森鐵作從深山雞舍到各式鐵工修繕都全力以赴。那些看似粗重、零散的案場，磨出了面對現場的判斷力，也讓我們更確定：沒有小案子，只有值得被好好完成的作品。
       </p>
     </div>
 
     <div class="founder-profile">
       <article class="profile-copy">
-        <span class="story-tag">Founder Profile</span>
-        <h3>把複雜的現場，整理成可靠的工程方案。</h3>
+        <span class="story-tag">Craft Belief</span>
+        <h3>真正的工藝，不只在手上，也在溝通裡。</h3>
         <p>
-          從不鏽鋼門窗、欄杆扶手、採光罩到設計師鐵件，創辦人帶著團隊面對不同空間條件，用清楚的施工順序與扎實的加工細節，讓每個案場都有穩定的完成度。
+          精準尺寸與結構安全是基本。杰森鐵作更重視動工前的討論，從設計比例、材質語彙到收邊細節都逐一確認，讓採光罩、欄杆扶手、不鏽鋼門窗與客製鐵件，都能貼合現場，也貼近人的日常。
         </p>
       </article>
 
@@ -113,7 +125,7 @@ const storyPlaceholders = [
     <div class="section-heading split-heading">
       <div>
         <p class="eyebrow">Founder Principles</p>
-        <h2>三個放在前面的施工原則</h2>
+        <h2>三個放在前面的堅持</h2>
       </div>
 
     </div>
@@ -133,20 +145,27 @@ const storyPlaceholders = [
 
   <section class="section story-timeline">
     <div>
-      <p class="eyebrow">Story Coming Next</p>
-      <h2>這裡保留給你的創業故事。</h2>
+      <p class="eyebrow">Path</p>
+      <h2>從基層扎根，到設計協作。</h2>
       <p>
-        之後可以把創業契機、重要轉折、代表案場與品牌願景放進來，讓訪客更清楚看見 JETSEN 背後的人與信念。
+        五年多來，創辦人仍堅持親自思考細節並參與完工。每一道焊道、每一次拋光，都是對品質負責，也是對鐵作工藝的尊重。
       </p>
     </div>
 
     <ol class="timeline-list">
-      <li v-for="(item, index) in storyPlaceholders" :key="item">
+      <li v-for="(item, index) in storyMilestones" :key="item.title">
         <span>{{ String(index + 1).padStart(2, '0') }}</span>
-        <strong>{{ item }}</strong>
-        <p>待補上創業故事內容。</p>
+        <strong>{{ item.title }}</strong>
+        <p>{{ item.text }}</p>
       </li>
     </ol>
+  </section>
+
+  <section class="section story-summary">
+    <div class="section-heading">
+      <p class="eyebrow">FORGED BY EXPERIENCE</p>
+      <h2>「走過什麼都接的歲月，杰森鐵作換來的，是把每件作品都當成承諾的實力。」</h2>
+    </div>
   </section>
 </template>
 
@@ -237,7 +256,8 @@ const storyPlaceholders = [
 
 .founder-section,
 .principle-section,
-.story-timeline {
+.story-timeline,
+.story-summary {
   background: #000;
 }
 
@@ -402,6 +422,10 @@ const storyPlaceholders = [
 
 .story-timeline > div p:not(.eyebrow) {
   margin-bottom: 0;
+}
+
+.story-summary .section-heading {
+  width: 100%;
 }
 
 .timeline-list {

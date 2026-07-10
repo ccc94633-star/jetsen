@@ -7,6 +7,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  showOnDesktop: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const route = useRoute()
@@ -77,7 +81,11 @@ onBeforeUnmount(() => {
   <Transition name="go-top">
     <button
       v-show="isVisible"
-      :class="['go-top-button', embedded ? 'go-top-button--embedded' : 'go-top-button--standalone']"
+      :class="[
+        'go-top-button',
+        embedded ? 'go-top-button--embedded' : 'go-top-button--standalone',
+        showOnDesktop ? 'go-top-button--desktop-enabled' : '',
+      ]"
       type="button"
       :style="buttonStyle"
       aria-label="回到頁面頂端"
@@ -174,7 +182,7 @@ onBeforeUnmount(() => {
 }
 
 @media (min-width: 721px) {
-  .go-top-button--standalone {
+  .go-top-button--standalone:not(.go-top-button--desktop-enabled) {
     display: none;
   }
 }

@@ -16,7 +16,7 @@ const isAdminLayout = computed(() => route.meta.layout === 'admin')
     <RouterView />
   </main>
   <SiteFooter v-if="!isAdminLayout" />
-  <GoTopButton v-if="!isAdminLayout" />
+  <GoTopButton :show-on-desktop="isAdminLayout" />
 </template>
 
 <style>
@@ -118,23 +118,15 @@ a {
 
 :deep(.brand) {
   display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-  color: #fff;
-  font-size: 1.15rem;
-  font-weight: 900;
+  align-items: center;
+  flex: 0 0 auto;
   text-decoration: none;
 }
 
-:deep(.brand-mark) {
-  color: var(--color-accent);
-  font-size: 1.35rem;
-  font-style: italic;
-  font-weight: 950;
-}
-
-:deep(.brand-name) {
-  color: #f8f8f4;
+:deep(.brand-logo) {
+  display: block;
+  width: clamp(150px, 18vw, 214px);
+  height: auto;
 }
 
 :deep(nav) {
@@ -345,6 +337,10 @@ main {
 
   :deep(nav) {
     justify-content: flex-start;
+  }
+
+  :deep(.brand-logo) {
+    width: clamp(132px, 46vw, 176px);
   }
 
   :deep(.page-hero h1) {
