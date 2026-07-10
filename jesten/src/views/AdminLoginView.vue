@@ -6,7 +6,7 @@ import { hasSupabaseConfig, supabase } from '@/lib/supabase'
 const route = useRoute()
 const router = useRouter()
 
-const email = ref('')
+const email = ref('kxc.sam@gmail.com')
 const password = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
