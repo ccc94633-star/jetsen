@@ -14,6 +14,7 @@ const selectedCategoryId = ref('')
 const selectedFiles = ref([])
 const searchTerm = ref('')
 const photoSectionRef = ref(null)
+const uploadSubmitRef = ref(null)
 const uploadSummaries = ref([])
 const panel = ref('')
 const newCategoryTitle = ref('')
@@ -382,10 +383,18 @@ const deleteCategory = async () => {
   await loadAdminData()
 }
 
-const handleFiles = (event) => {
+const handleFiles = async (event) => {
   selectedFiles.value = Array.from(event.target.files ?? [])
   uploadSummaries.value = []
   successMessage.value = ''
+
+  if (selectedFiles.value.length) {
+    await nextTick()
+    uploadSubmitRef.value?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    })
+  }
 }
 
 const uploadPhotos = async () => {
@@ -677,11 +686,22 @@ onMounted(async () => {
       <Transition name="photo-slide">
         <div v-if="!isLoading" ref="photoSectionRef" class="photo-section">
           <section class="photo-board" aria-label="照片方格管理">
-            <label v-if="selectedCategory" class="photo-tile upload-tile" for="admin-photo-upload">
-              <input id="admin-photo-upload" type="file" accept="image/*" multiple @change="handleFiles" />
+            <label
+              class="photo-tile upload-tile"
+              :class="{ disabled: !selectedCategory }"
+              for="admin-photo-upload"
+            >
+              <input
+                id="admin-photo-upload"
+                type="file"
+                accept="image/*"
+                multiple
+                :disabled="!selectedCategory"
+                @change="handleFiles"
+              />
               <span class="tile-plus" aria-hidden="true">+</span>
               <strong>新增照片</strong>
-              <small>單張最多 15MB</small>
+              <small>{{ selectedCategory ? '單張最多 15MB' : '請先選擇分類' }}</small>
             </label>
 
             <article v-for="photo in filteredPhotos" :key="photo.id" class="photo-tile photo-card">
@@ -719,6 +739,7 @@ onMounted(async () => {
 
           <button
             v-if="selectedFiles.length"
+            ref="uploadSubmitRef"
             type="button"
             class="upload-submit"
             :disabled="isUploading"
@@ -766,6 +787,7 @@ onMounted(async () => {
 }
 
 .admin-header {
+  align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 28px;
@@ -826,6 +848,13 @@ input {
     background 180ms ease,
     box-shadow 180ms ease,
     transform 180ms ease;
+}
+
+.logout-button {
+  min-height: 64px;
+  padding: 15px 25px;
+  font-size: 1.4rem;
+  white-space: nowrap;
 }
 
 .logout-button:hover,
@@ -1095,6 +1124,21 @@ input {
   transform: translateY(-3px);
 }
 
+.upload-tile.disabled {
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #8a8a82;
+  cursor: not-allowed;
+}
+
+.upload-tile.disabled:hover {
+  background: #111;
+  transform: none;
+}
+
+.upload-tile.disabled .tile-plus {
+  opacity: 0.4;
+}
+
 .upload-tile input {
   position: absolute;
   width: 1px;
@@ -1344,10 +1388,21 @@ input {
 }
 
 @media (max-width: 780px) {
-  .admin-header,
   .selected-row {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-header {
+    align-items: flex-end;
+  }
+
+  .logout-button {
+    width: auto;
+    min-height: 53px;
+    padding: 11px 20px;
+    font-size: 1.2rem;
+    white-space: nowrap;
   }
 
   .category-actions {
@@ -1383,20 +1438,21 @@ input {
   .photo-board {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
+    align-items: stretch;
   }
 
   .photo-tile {
     width: 100%;
     height: auto;
-    aspect-ratio: 1;
   }
 
-  .photo-tile.photo-card {
-    aspect-ratio: auto;
-    padding-bottom: 50px;
+  .photo-card {
+    display: flex;
+    flex-direction: column;
   }
 
   .photo-actions {
+    position: static;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     opacity: 1;
@@ -1421,8 +1477,10 @@ input {
   }
 
   .photo-card img {
+    width: 100%;
     aspect-ratio: 1;
     height: auto;
+    flex: 0 0 auto;
   }
 }
 </style>
