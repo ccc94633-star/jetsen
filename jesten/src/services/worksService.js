@@ -3,14 +3,27 @@ import { hasSupabaseConfig, supabase } from '@/lib/supabase'
 
 const sortByOrder = (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
 
+const getLocalPhotoIndex = (storagePath, slug) => {
+  const match = storagePath?.match(new RegExp(`^local/${slug}/(\\d+)$`))
+  return match ? Number(match[1]) : null
+}
+
+const getDisplayPhoto = (photo, category, fullLocalWork) => {
+  const localPhotoIndex = getLocalPhotoIndex(photo.storage_path, category.slug)
+  const localImageUrl = Number.isInteger(localPhotoIndex) ? fullLocalWork?.gallery?.[localPhotoIndex] : null
+
+  return localImageUrl ? { ...photo, image_url: localImageUrl } : photo
+}
+
 const buildRemoteWork = (category, photos) => {
   const localWork = localWorks.find((work) => work.slug === category.slug)
   const fullLocalWork = fullWorks.find((work) => work.slug === category.slug)
   const fallbackWork = localWorks[0]
-  const remoteGallery = photos.map((photo) => photo.image_url)
+  const displayPhotos = photos.map((photo) => getDisplayPhoto(photo, category, fullLocalWork))
+  const remoteGallery = displayPhotos.map((photo) => photo.image_url)
   const localGallery = fullLocalWork?.gallery ?? []
   const gallery = [...remoteGallery, ...localGallery.filter((image) => !remoteGallery.includes(image))]
-  const coverPhoto = photos.find((photo) => photo.is_cover) ?? photos[0]
+  const coverPhoto = displayPhotos.find((photo) => photo.is_cover) ?? displayPhotos[0]
 
   return {
     ...localWork,

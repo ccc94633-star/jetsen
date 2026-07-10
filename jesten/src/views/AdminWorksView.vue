@@ -24,6 +24,10 @@ const statusMessage = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
 const successRoute = ref(null)
+const successHref = computed(() => {
+  if (!successRoute.value) return ''
+  return router.resolve(successRoute.value).href
+})
 
 const selectedCategory = computed(() =>
   categories.value.find((category) => category.id === selectedCategoryId.value),
@@ -32,12 +36,26 @@ const selectedCategory = computed(() =>
 const getLocalWorkByCategory = (category) =>
   localWorks.find((work) => work.slug === category?.slug)
 
+const getLocalPhotoIndex = (storagePath, slug) => {
+  const match = storagePath?.match(new RegExp(`^local/${slug}/(\\d+)$`))
+  return match ? Number(match[1]) : null
+}
+
+const getDisplayPhoto = (photo, category, localWork) => {
+  const localPhotoIndex = getLocalPhotoIndex(photo.storage_path, category.slug)
+  const localImageUrl = Number.isInteger(localPhotoIndex) ? localWork?.gallery?.[localPhotoIndex] : null
+
+  return localImageUrl ? { ...photo, image_url: localImageUrl } : photo
+}
+
 const getDisplayPhotosForCategory = (category) => {
   if (!category) return []
 
-  const remotePhotos = photos.value.filter((photo) => photo.category_id === category.id)
-  const remoteImageUrls = new Set(remotePhotos.map((photo) => photo.image_url))
   const localWork = getLocalWorkByCategory(category)
+  const remotePhotos = photos.value
+    .filter((photo) => photo.category_id === category.id)
+    .map((photo) => getDisplayPhoto(photo, category, localWork))
+  const remoteImageUrls = new Set(remotePhotos.map((photo) => photo.image_url))
   const localPreviewPhotos = (localWork?.gallery ?? [])
     .filter((imageUrl) => !remoteImageUrls.has(imageUrl))
     .map((imageUrl, index) => ({
@@ -103,6 +121,31 @@ const clearFeedback = () => {
   errorMessage.value = ''
   successMessage.value = ''
   successRoute.value = null
+}
+
+const getCategoryById = (categoryId) => categories.value.find((category) => category.id === categoryId)
+
+const getCategoryRoute = (category) => {
+  if (!category?.slug) return null
+
+  return {
+    name: 'works-detail',
+    params: { slug: category.slug },
+  }
+}
+
+const worksRoute = {
+  name: 'works',
+}
+
+const setSuccessFeedback = (message, category) => {
+  successMessage.value = message
+  successRoute.value = getCategoryRoute(category)
+}
+
+const setWorksSuccessFeedback = (message) => {
+  successMessage.value = message
+  successRoute.value = worksRoute
 }
 
 const restoreMissingDefaultWorks = async (remoteCategories) => {
@@ -245,9 +288,9 @@ const createCategory = async () => {
 
   newCategoryTitle.value = ''
   panel.value = ''
-  successMessage.value = `已新增「${title}」分類`
   await loadAdminData()
   selectCategory(data.id)
+  setSuccessFeedback(`已新增「${title}」分類`, data)
 }
 
 const updateCategory = async () => {
@@ -278,8 +321,9 @@ const updateCategory = async () => {
   }
 
   panel.value = ''
-  successMessage.value = '分類已更新'
+  const updatedCategory = { ...selectedCategory.value, title, tag: title }
   await loadAdminData()
+  setSuccessFeedback('分類已更新', updatedCategory)
 }
 
 const deleteCategory = async () => {
@@ -321,7 +365,7 @@ const deleteCategory = async () => {
 
   selectedCategoryId.value = ''
   panel.value = ''
-  successMessage.value = `已刪除「${category.title}」分類，並刪除 ${categoryPhotos.length} 張照片`
+  setWorksSuccessFeedback(`已刪除「${category.title}」分類，並刪除 ${categoryPhotos.length} 張照片`)
   await loadAdminData()
 }
 
@@ -406,11 +450,7 @@ const uploadPhotos = async () => {
 
     selectedFiles.value = []
     statusMessage.value = ''
-    successMessage.value = `成功上傳 ${uploadedCount} 張照片`
-    successRoute.value = {
-      name: 'works-detail',
-      params: { slug: selectedCategory.value.slug },
-    }
+    setSuccessFeedback(`成功上傳 ${uploadedCount} 張照片`, selectedCategory.value)
     await loadAdminData()
   } catch (error) {
     errorMessage.value = error.message || '上傳失敗，請稍後再試'
@@ -438,7 +478,7 @@ const setCover = async (photo) => {
     return
   }
 
-  successMessage.value = '封面已更新'
+  setSuccessFeedback('封面已更新', getCategoryById(photo.category_id))
   await loadAdminData()
 }
 
@@ -455,7 +495,7 @@ const togglePublished = async (photo) => {
     return
   }
 
-  successMessage.value = photo.is_published ? '照片已隱藏' : '照片已發布'
+  setSuccessFeedback(photo.is_published ? '照片已隱藏' : '照片已發布', getCategoryById(photo.category_id))
   await loadAdminData()
 }
 
@@ -479,13 +519,8 @@ const deletePhoto = async (photo) => {
     return
   }
 
-  successMessage.value = '成功刪除 1 張照片'
+  setSuccessFeedback('成功刪除 1 張照片', getCategoryById(photo.category_id))
   await loadAdminData()
-}
-
-const goToSuccessRoute = () => {
-  if (!successRoute.value) return
-  router.push(successRoute.value)
 }
 
 const logout = async () => {
@@ -510,7 +545,7 @@ onMounted(async () => {
       <header class="admin-header">
         <div>
           <p class="eyebrow">Works Admin</p>
-          <h1>作品照片管理</h1>
+          <h1>產品照片管理</h1>
         </div>
         <button type="button" class="logout-button" @click="logout">登出</button>
       </header>
@@ -609,7 +644,7 @@ onMounted(async () => {
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         <div v-if="successMessage" class="success-message">
           <span>{{ successMessage }}</span>
-          <button v-if="successRoute" type="button" @click="goToSuccessRoute">前往查看</button>
+          <a v-if="successHref" :href="successHref" target="_blank" rel="noopener">點此查看</a>
         </div>
         <p v-if="isLoading" class="status-message">讀取中...</p>
       </section>
@@ -740,7 +775,7 @@ input {
 .category-actions button,
 .category-form button,
 .delete-category-panel button,
-.success-message button,
+.success-message a,
 .upload-submit,
 .photo-actions button {
   min-height: 46px;
@@ -763,7 +798,7 @@ input {
 .category-actions button:hover,
 .category-form button:hover,
 .delete-category-panel button:hover,
-.success-message button:hover,
+.success-message a:hover,
 .upload-submit:hover,
 .photo-actions button:hover {
   border-color: rgba(255, 90, 18, 0.62);
@@ -833,7 +868,7 @@ input {
 .category-tabs button.active,
 .category-actions button.active,
 .category-form button,
-.success-message button,
+.success-message a,
 .upload-submit {
   border-color: transparent;
   background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
@@ -947,6 +982,12 @@ input {
   background: #10200d;
 }
 
+.success-message a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 .photo-section {
   overflow: hidden;
 }
@@ -1021,15 +1062,34 @@ input {
 }
 
 .tile-plus {
+  position: relative;
   display: grid;
-  width: 34px;
-  height: 34px;
+  width: 72px;
+  height: 72px;
   place-items: center;
-  border-radius: 50%;
-  color: #fff;
-  background: linear-gradient(180deg, #ff5d19 0%, #f0440a 100%);
-  font-size: 1.8rem;
+  color: #ff6a18;
+  font-size: 0;
   line-height: 1;
+}
+
+.tile-plus::before,
+.tile-plus::after {
+  display: block;
+  background: currentColor;
+  content: '';
+}
+
+.tile-plus::before {
+  position: absolute;
+  top: 10px;
+  width: 34px;
+  height: 6px;
+}
+
+.tile-plus::after {
+  width: 34px;
+  height: 42px;
+  clip-path: polygon(50% 0, 100% 42%, 70% 42%, 70% 100%, 30% 100%, 30% 42%, 0 42%);
 }
 
 .upload-tile strong,
@@ -1116,14 +1176,34 @@ input {
   display: grid;
   place-items: center;
   align-content: center;
-  gap: 8px;
+  gap: 14px;
+  border: 1px dashed rgba(255, 90, 18, 0.72);
   color: #9d9d95;
   text-align: center;
 }
 
 .empty-tile span {
-  color: #ff6a18;
-  font-size: 3rem;
+  position: relative;
+  display: block;
+  width: 72px;
+  height: 72px;
+  color: transparent;
+  font-size: 0;
+}
+
+.empty-tile span::before {
+  display: none;
+}
+
+.empty-tile span::after {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='none' stroke='%23ff7a32' stroke-width='5' d='M8 18v40h40'/%3E%3Cpath fill='none' stroke='%23ff7a32' stroke-width='5' d='M16 10h40v40H16z'/%3E%3Ccircle cx='27' cy='22' r='5' fill='%23ff7a32'/%3E%3Cpath fill='%23ff7a32' d='M21 44l11-15 9 11 7-9 8 13H21z'/%3E%3C/svg%3E");
+  content: '';
+  transform: translate(-50%, -50%);
 }
 
 .upload-submit {

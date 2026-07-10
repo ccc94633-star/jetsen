@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
 }
 
 .go-top-icon__bar {
-  fill: rgba(255, 245, 235, 0.74);
+  fill: #ff7a32;
 }
 
 .go-top-icon__arrow {
