@@ -46,6 +46,12 @@ const router = createRouter({
       component: () => import('../views/AdminWorksView.vue'),
       meta: { layout: 'admin', requiresAuth: true },
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue'),
+      meta: { layout: 'blank' },
+    },
   ],
   scrollBehavior() {
     return { top: 0 }

@@ -8,14 +8,15 @@ import SiteHeader from './components/SiteHeader.vue'
 
 const route = useRoute()
 const isAdminLayout = computed(() => route.meta.layout === 'admin')
+const hidesSiteChrome = computed(() => ['admin', 'blank'].includes(route.meta.layout))
 </script>
 
 <template>
-  <SiteHeader v-if="!isAdminLayout" />
+  <SiteHeader v-if="!hidesSiteChrome" />
   <main>
     <RouterView />
   </main>
-  <SiteFooter v-if="!isAdminLayout" />
+  <SiteFooter v-if="!hidesSiteChrome" />
   <GoTopButton :show-on-desktop="isAdminLayout" />
 </template>
 
