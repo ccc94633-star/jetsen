@@ -50,6 +50,16 @@ const getDisplayPhoto = (photo, category, localWork) => {
   return localImageUrl ? { ...photo, image_url: localImageUrl } : photo
 }
 
+const sortPhotosNewestFirst = (a, b) => {
+  if (a.is_local_preview !== b.is_local_preview) return a.is_local_preview ? 1 : -1
+
+  const aCreatedAt = a.created_at ? new Date(a.created_at).getTime() : 0
+  const bCreatedAt = b.created_at ? new Date(b.created_at).getTime() : 0
+  if (aCreatedAt !== bCreatedAt) return bCreatedAt - aCreatedAt
+
+  return (b.sort_order ?? 0) - (a.sort_order ?? 0)
+}
+
 const getDisplayPhotosForCategory = (category) => {
   if (!category) return []
 
@@ -58,7 +68,7 @@ const getDisplayPhotosForCategory = (category) => {
     .filter((photo) => photo.category_id === category.id)
     .map((photo) => getDisplayPhoto(photo, category, localWork))
   const remoteImageUrls = new Set(remotePhotos.map((photo) => photo.image_url))
-  const localPreviewPhotos = (localWork?.gallery ?? [])
+  const localPreviewPhotos = remotePhotos.length ? [] : (localWork?.gallery ?? [])
     .filter((imageUrl) => !remoteImageUrls.has(imageUrl))
     .map((imageUrl, index) => ({
       id: `local-preview-${category.slug}-${index}`,
@@ -72,9 +82,7 @@ const getDisplayPhotosForCategory = (category) => {
       is_local_preview: true,
     }))
 
-  return [...remotePhotos, ...localPreviewPhotos].sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
-  )
+  return [...remotePhotos, ...localPreviewPhotos].sort(sortPhotosNewestFirst)
 }
 
 const allVisiblePhotos = computed(() =>
@@ -106,6 +114,30 @@ const getCategoryPhotoCount = (categoryId) => {
 const totalPhotoCount = computed(() => allVisiblePhotos.value.length)
 
 const isLocalRestoredPhoto = (storagePath) => storagePath?.startsWith('local/')
+
+const getPersistedLocalStoragePath = (storagePath) =>
+  storagePath?.replace(/^local-preview\//, 'local/')
+
+const ensurePersistedPhoto = async (photo) => {
+  if (!photo.is_local_preview) return photo
+
+  const { data, error } = await supabase
+    .from('work_photos')
+    .insert({
+      category_id: photo.category_id,
+      image_url: photo.image_url,
+      storage_path: getPersistedLocalStoragePath(photo.storage_path),
+      alt_text: photo.alt_text,
+      sort_order: photo.sort_order,
+      is_published: photo.is_published,
+      is_cover: photo.is_cover,
+    })
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
 
 const formatBytes = (bytes) => {
   if (!Number.isFinite(bytes)) return '0 KB'
@@ -484,17 +516,25 @@ const uploadPhotos = async () => {
 const setCover = async (photo) => {
   clearFeedback()
 
+  let targetPhoto = photo
+  try {
+    targetPhoto = await ensurePersistedPhoto(photo)
+  } catch (error) {
+    errorMessage.value = `建立照片資料失敗：${error.message}`
+    return
+  }
+
   const { error: resetError } = await supabase
     .from('work_photos')
     .update({ is_cover: false })
-    .eq('category_id', photo.category_id)
+    .eq('category_id', targetPhoto.category_id)
 
   if (resetError) {
     errorMessage.value = '設定封面失敗'
     return
   }
 
-  const { error } = await supabase.from('work_photos').update({ is_cover: true }).eq('id', photo.id)
+  const { error } = await supabase.from('work_photos').update({ is_cover: true }).eq('id', targetPhoto.id)
   if (error) {
     errorMessage.value = '設定封面失敗'
     return
@@ -507,10 +547,18 @@ const setCover = async (photo) => {
 const togglePublished = async (photo) => {
   clearFeedback()
 
+  let targetPhoto = photo
+  try {
+    targetPhoto = await ensurePersistedPhoto(photo)
+  } catch (error) {
+    errorMessage.value = `建立照片資料失敗：${error.message}`
+    return
+  }
+
   const { error } = await supabase
     .from('work_photos')
-    .update({ is_published: !photo.is_published })
-    .eq('id', photo.id)
+    .update({ is_published: !targetPhoto.is_published })
+    .eq('id', targetPhoto.id)
 
   if (error) {
     errorMessage.value = '修改發布狀態失敗'
@@ -723,8 +771,10 @@ onMounted(async () => {
                 ×
               </button>
               <div class="photo-actions">
-                <button type="button" :disabled="photo.is_cover || photo.is_local_preview" @click="setCover(photo)">設為封面</button>
-                <button type="button" :disabled="photo.is_local_preview" @click="togglePublished(photo)">
+                <button type="button" :disabled="photo.is_cover" @click="setCover(photo)">
+                  {{ photo.is_cover ? '目前封面' : '設為封面' }}
+                </button>
+                <button type="button" @click="togglePublished(photo)">
                   {{ photo.is_published ? '隱藏圖片' : '取消隱藏' }}
                 </button>
               </div>
@@ -1323,7 +1373,7 @@ input {
 }
 
 .photo-actions button:disabled {
-  cursor: not-allowed;
+  cursor: default;
   opacity: 0.5;
 }
 

@@ -1,7 +1,13 @@
 import { fullWorks, works as localWorks } from '@/data/works'
 import { hasSupabaseConfig, supabase } from '@/lib/supabase'
 
-const sortByOrder = (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)
+const sortPhotosNewestFirst = (a, b) => {
+  const aCreatedAt = a.created_at ? new Date(a.created_at).getTime() : 0
+  const bCreatedAt = b.created_at ? new Date(b.created_at).getTime() : 0
+  if (aCreatedAt !== bCreatedAt) return bCreatedAt - aCreatedAt
+
+  return (b.sort_order ?? 0) - (a.sort_order ?? 0)
+}
 
 const getLocalPhotoIndex = (storagePath, slug) => {
   const match = storagePath?.match(new RegExp(`^local/${slug}/(\\d+)$`))
@@ -15,15 +21,23 @@ const getDisplayPhoto = (photo, category, fullLocalWork) => {
   return localImageUrl ? { ...photo, image_url: localImageUrl } : photo
 }
 
+const sortCoverFirst = (a, b) => {
+  if (a.is_cover !== b.is_cover) return a.is_cover ? -1 : 1
+  return 0
+}
+
 const buildRemoteWork = (category, photos) => {
   const localWork = localWorks.find((work) => work.slug === category.slug)
   const fullLocalWork = fullWorks.find((work) => work.slug === category.slug)
   const fallbackWork = localWorks[0]
-  const displayPhotos = photos.map((photo) => getDisplayPhoto(photo, category, fullLocalWork))
-  const remoteGallery = displayPhotos.map((photo) => photo.image_url)
+  const displayPhotos = photos
+    .filter((photo) => photo.is_published)
+    .map((photo) => getDisplayPhoto(photo, category, fullLocalWork))
+  const galleryPhotos = [...displayPhotos].sort(sortCoverFirst)
+  const remoteGallery = galleryPhotos.map((photo) => photo.image_url)
   const localGallery = fullLocalWork?.gallery ?? []
-  const gallery = [...remoteGallery, ...localGallery.filter((image) => !remoteGallery.includes(image))]
-  const coverPhoto = displayPhotos.find((photo) => photo.is_cover) ?? displayPhotos[0]
+  const gallery = photos.length ? remoteGallery : localGallery
+  const coverPhoto = galleryPhotos[0]
 
   return {
     ...localWork,
@@ -54,8 +68,7 @@ export const getPublishedWorks = async () => {
       supabase
         .from('work_photos')
         .select('*')
-        .eq('is_published', true)
-        .order('sort_order', { ascending: true }),
+        .order('created_at', { ascending: false }),
     ])
 
   if (categoriesError || photosError || !categories?.length) {
@@ -65,7 +78,7 @@ export const getPublishedWorks = async () => {
   return categories.map((category) =>
     buildRemoteWork(
       category,
-      (photos ?? []).filter((photo) => photo.category_id === category.id).sort(sortByOrder),
+      (photos ?? []).filter((photo) => photo.category_id === category.id).sort(sortPhotosNewestFirst),
     ),
   )
 }
