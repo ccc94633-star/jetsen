@@ -1260,8 +1260,9 @@ onUnmounted(() => {
 
   .category-pills {
     flex-wrap: wrap;
-    justify-content: stretch;
-    width: 100%;
+    justify-content: center;
+    width: auto;
+    max-width: 100%;
     padding: 7px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
@@ -1270,8 +1271,8 @@ onUnmounted(() => {
 
   .category-pills button {
     min-height: 34px;
-    flex: 1 1 0;
-    padding: 8px 6px;
+    flex: 0 0 auto;
+    padding: 8px 16px;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 6px;
     background: rgba(255, 90, 18, 0.84);
