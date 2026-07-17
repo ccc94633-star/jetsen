@@ -9,7 +9,12 @@ import { getPublishedWorks } from '@/services/worksService'
 const route = useRoute()
 const allWorks = ref(works)
 const work = computed(() => allWorks.value.find((item) => item.slug === route.params.slug) ?? findWorkBySlug(route.params.slug) ?? works[0])
-const relatedWorks = computed(() => allWorks.value.filter((item) => item.slug !== work.value.slug).slice(0, 3))
+const relatedWorks = computed(() => {
+  const currentIndex = allWorks.value.findIndex((item) => item.slug === work.value.slug)
+  if (currentIndex === -1) return allWorks.value.filter((item) => item.slug !== work.value.slug).slice(0, 3)
+
+  return [...allWorks.value.slice(currentIndex + 1), ...allWorks.value.slice(0, currentIndex)].slice(0, 3)
+})
 const activeImage = ref(null)
 const selectedServiceIndex = ref(null)
 const hoveredServiceIndex = ref(null)
@@ -426,11 +431,11 @@ onBeforeUnmount(() => {
 .detail-hero {
   position: relative;
   display: grid;
-  min-height: calc(100vh - 76px);
-  min-height: calc(100svh - 76px);
+  min-height: clamp(520px, 78vh, 760px);
+  min-height: clamp(520px, 78svh, 760px);
   align-items: center;
   overflow: hidden;
-  padding: clamp(96px, 14vw, 160px) clamp(20px, 5vw, 72px) clamp(96px, 12vw, 140px);
+  padding: clamp(76px, 11vw, 132px) clamp(20px, 5vw, 72px) clamp(72px, 9vw, 112px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: #0b0503;
 }
@@ -527,7 +532,7 @@ onBeforeUnmount(() => {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 18px;
+  gap: 14px;
   max-width: 860px;
 }
 
@@ -1241,7 +1246,8 @@ onBeforeUnmount(() => {
 
 @media (max-width: 640px) {
   .detail-hero {
-    min-height: 82vh;
+    min-height: 72vh;
+    min-height: 72svh;
   }
 
   .hero-copy h1 {

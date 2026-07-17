@@ -4,6 +4,7 @@ import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { fullWorks as localWorks } from '@/data/works'
 import { hasSupabaseConfig, supabase } from '@/lib/supabase'
+import { getWorkCategoryTag } from '@/utils/workTags'
 
 const router = useRouter()
 const bucketName = 'work-photos'
@@ -18,7 +19,9 @@ const uploadSubmitRef = ref(null)
 const uploadSummaries = ref([])
 const panel = ref('')
 const newCategoryTitle = ref('')
+const newCategoryDescription = ref('')
 const editCategoryTitle = ref('')
+const editCategoryDescription = ref('')
 const isLoading = ref(true)
 const isUploading = ref(false)
 const isSavingCategory = ref(false)
@@ -263,6 +266,7 @@ const loadAdminData = async () => {
   }
 
   editCategoryTitle.value = selectedCategory.value?.title ?? ''
+  editCategoryDescription.value = selectedCategory.value?.description ?? ''
 }
 
 const scrollToPhotoSection = async () => {
@@ -274,8 +278,10 @@ const scrollToPhotoSection = async () => {
 }
 
 const selectCategory = (categoryId, shouldScroll = false) => {
+  const category = categories.value.find((category) => category.id === categoryId)
   selectedCategoryId.value = categoryId
-  editCategoryTitle.value = categories.value.find((category) => category.id === categoryId)?.title ?? ''
+  editCategoryTitle.value = category?.title ?? ''
+  editCategoryDescription.value = category?.description ?? ''
   selectedFiles.value = []
   uploadSummaries.value = []
   panel.value = ''
@@ -300,11 +306,15 @@ const openCategoryPanel = (mode) => {
   const nextPanel = panel.value === mode ? '' : mode
   panel.value = nextPanel
   clearFeedback()
-  if (mode === 'edit') editCategoryTitle.value = selectedCategory.value?.title ?? ''
+  if (mode === 'edit') {
+    editCategoryTitle.value = selectedCategory.value?.title ?? ''
+    editCategoryDescription.value = selectedCategory.value?.description ?? ''
+  }
 }
 
 const createCategory = async () => {
   const title = newCategoryTitle.value.trim()
+  const description = newCategoryDescription.value.trim()
   if (!title) {
     errorMessage.value = '請輸入分類名稱'
     return
@@ -318,7 +328,9 @@ const createCategory = async () => {
     .insert({
       slug: slugify(title),
       title,
-      tag: title,
+      tag: getWorkCategoryTag({ title }),
+      description,
+      detail: description,
       sort_order: categories.value.length + 1,
       is_active: true,
     })
@@ -333,6 +345,7 @@ const createCategory = async () => {
   }
 
   newCategoryTitle.value = ''
+  newCategoryDescription.value = ''
   panel.value = ''
   await loadAdminData()
   selectCategory(data.id)
@@ -346,6 +359,7 @@ const updateCategory = async () => {
   }
 
   const title = editCategoryTitle.value.trim()
+  const description = editCategoryDescription.value.trim()
   if (!title) {
     errorMessage.value = '請輸入分類名稱'
     return
@@ -356,7 +370,7 @@ const updateCategory = async () => {
 
   const { error } = await supabase
     .from('work_categories')
-    .update({ title, tag: title })
+    .update({ title, tag: getWorkCategoryTag({ title, slug: selectedCategory.value.slug }), description, detail: description })
     .eq('id', selectedCategory.value.id)
 
   isSavingCategory.value = false
@@ -367,7 +381,13 @@ const updateCategory = async () => {
   }
 
   panel.value = ''
-  const updatedCategory = { ...selectedCategory.value, title, tag: title }
+  const updatedCategory = {
+    ...selectedCategory.value,
+    title,
+    tag: getWorkCategoryTag({ title, slug: selectedCategory.value.slug }),
+    description,
+    detail: description,
+  }
   await loadAdminData()
   setSuccessFeedback('分類已更新', updatedCategory)
 }
@@ -691,6 +711,14 @@ onMounted(async () => {
             新增分類名稱
             <input v-model="newCategoryTitle" type="text" placeholder="例如：採光罩" />
           </label>
+          <label class="category-form-wide">
+            分類描述
+            <textarea
+              v-model="newCategoryDescription"
+              rows="3"
+              placeholder="例如：依現場尺寸規劃門窗結構，兼顧採光、防護與俐落收邊。"
+            ></textarea>
+          </label>
           <button type="submit" :disabled="isSavingCategory">
             {{ isSavingCategory ? '新增中...' : '新增' }}
           </button>
@@ -700,6 +728,14 @@ onMounted(async () => {
           <label>
             修改分類名稱
             <input v-model="editCategoryTitle" type="text" placeholder="例如：隱形鐵窗" />
+          </label>
+          <label class="category-form-wide">
+            分類描述
+            <textarea
+              v-model="editCategoryDescription"
+              rows="3"
+              placeholder="例如：依現場尺寸規劃門窗結構，兼顧採光、防護與俐落收邊。"
+            ></textarea>
           </label>
           <button type="submit" :disabled="isSavingCategory">儲存</button>
         </form>
@@ -1051,7 +1087,12 @@ input {
   font-weight: 900;
 }
 
-.category-form input {
+.category-form-wide {
+  flex-basis: 100% !important;
+}
+
+.category-form input,
+.category-form textarea {
   min-height: 48px;
   padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -1059,6 +1100,12 @@ input {
   color: #fff;
   background: #050505;
   outline: none;
+}
+
+.category-form textarea {
+  min-height: 92px;
+  resize: vertical;
+  line-height: 1.6;
 }
 
 .delete-category-panel {

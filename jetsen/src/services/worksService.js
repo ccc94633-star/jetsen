@@ -1,5 +1,6 @@
 import { fullWorks, works as localWorks } from '@/data/works'
 import { hasSupabaseConfig, supabase } from '@/lib/supabase'
+import { getWorkCategoryTag } from '@/utils/workTags'
 
 const sortPhotosNewestFirst = (a, b) => {
   const aCreatedAt = a.created_at ? new Date(a.created_at).getTime() : 0
@@ -43,7 +44,11 @@ const buildRemoteWork = (category, photos) => {
     ...localWork,
     slug: category.slug,
     title: category.title || localWork?.title || category.slug,
-    tag: category.tag || localWork?.tag || 'Work',
+    tag: getWorkCategoryTag({
+      tag: category.tag || localWork?.tag,
+      title: category.title || localWork?.title,
+      slug: category.slug,
+    }),
     headline: category.headline || localWork?.headline || category.title,
     description: category.description || localWork?.description || '新增作品分類，照片上傳後會顯示在這裡。',
     detail: category.detail || localWork?.detail || category.description || '新增作品分類，照片上傳後會顯示在這裡。',

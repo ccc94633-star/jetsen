@@ -5,7 +5,7 @@ import footerLogo from '@/assets/images/brand/jetsen-wordmark-orange-transparent
 import footerSideLogo from '@/assets/images/brand/jetsen-wordmark-white.png'
 import footerWatermark from '@/assets/images/brand/jetsen-wordmark-white.png'
 
-const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩', '快速捲門', '設計師鐵件', '打造你的專屬鐵件']
+const services = ['採光罩', '防火門', '各式門窗', '欄杆扶手', '隱形鐵窗', '設計師鐵件', '打造你的專屬鐵件']
 </script>
 
 <template>
@@ -152,11 +152,15 @@ const services = ['不鏽鋼門窗', '欄杆扶手', '隱形鐵窗', '採光罩'
 }
 
 .footer-services span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 7px 10px;
   border: 1px solid var(--color-line);
   color: #ecece6;
   background: rgba(255, 255, 255, 0.035);
   font-weight: 800;
+  text-align: center;
 }
 
 .footer-services span:last-child {
