@@ -23,13 +23,42 @@ const loadMoreGalleryCount = 20
 const visibleGalleryCount = ref(initialGalleryCount)
 const visibleGallery = computed(() => work.value.gallery?.slice(0, visibleGalleryCount.value) ?? [])
 const hasMoreGallery = computed(() => (work.value.gallery?.length ?? 0) > visibleGalleryCount.value)
+const galleryLoadTrigger = ref(null)
+let galleryObserver = null
 
 const showMoreGallery = () => {
   visibleGalleryCount.value += loadMoreGalleryCount
 }
 
-watch(() => work.value.slug, () => {
+const disconnectGalleryLazyLoad = () => {
+  galleryObserver?.disconnect()
+  galleryObserver = null
+}
+
+const refreshGalleryLazyLoad = () => {
+  disconnectGalleryLazyLoad()
+
+  const trigger = galleryLoadTrigger.value
+
+  if (!trigger || !hasMoreGallery.value) return
+
+  galleryObserver = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+
+      disconnectGalleryLazyLoad()
+      showMoreGallery()
+      nextTick(refreshGalleryLazyLoad)
+    },
+    { rootMargin: '360px 0px 520px', threshold: 0 },
+  )
+  galleryObserver.observe(trigger)
+}
+
+watch(() => work.value.slug, async () => {
   visibleGalleryCount.value = initialGalleryCount
+  await nextTick()
+  refreshGalleryLazyLoad()
 })
 
 const scopeTrack = ref(null)
@@ -295,6 +324,10 @@ watch(activeImage, (image) => {
   document.body.style.overflow = image ? 'hidden' : ''
 })
 
+watch(hasMoreGallery, () => {
+  nextTick(refreshGalleryLazyLoad)
+})
+
 watch(relatedWorks, () => {
   nextTick(updateRelatedPagination)
 })
@@ -307,6 +340,7 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
   window.addEventListener('resize', updateRelatedPagination)
   nextTick(updateRelatedPagination)
+  nextTick(refreshGalleryLazyLoad)
 
   scopeViewportHighlight.refresh()
   window.addEventListener('resize', scopeViewportHighlight.refresh)
@@ -316,6 +350,7 @@ onMounted(() => {
     nextTick(() => {
       updateRelatedPagination()
       scopeViewportHighlight.refresh()
+      refreshGalleryLazyLoad()
     })
   })
 })
@@ -325,6 +360,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('resize', updateRelatedPagination)
   window.removeEventListener('resize', scopeViewportHighlight.refresh)
   scopeViewportHighlight.disconnect()
+  disconnectGalleryLazyLoad()
   document.body.style.overflow = ''
 })
 </script>
@@ -401,11 +437,7 @@ onBeforeUnmount(() => {
             <img :src="image" :alt="`${work.title}作品照片 ${index + 1}`" loading="lazy" />
           </button>
         </figure>
-        <figure v-if="hasMoreGallery" class="photo-grid-more">
-          <button type="button" @click="showMoreGallery">
-            <span>查看更多</span>
-          </button>
-        </figure>
+        <div v-if="hasMoreGallery" ref="galleryLoadTrigger" class="photo-grid-loader" aria-hidden="true"></div>
       </div>
       <div v-else class="empty-gallery">
         <strong>尚未上傳作品照片</strong>
@@ -994,53 +1026,10 @@ onBeforeUnmount(() => {
   transform: scale(1.04);
 }
 
-.photo-grid figure.photo-grid-more {
-  display: flex;
-  grid-row: auto;
-  align-items: center;
-  justify-content: center;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-}
-
-.photo-grid-more button {
-  display: inline-flex;
-  width: auto;
-  height: auto;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 22px;
-  border: 1px dashed rgba(255, 90, 18, 0.58);
-  border-radius: 0;
-  color: #fff;
-  background:
-    radial-gradient(circle at 30% 16%, rgba(255, 176, 96, 0.24), transparent 42%),
-    linear-gradient(145deg, rgba(28, 18, 14, 0.94), rgba(10, 10, 10, 0.94));
-  box-shadow:
-    0 14px 32px rgba(0, 0, 0, 0.36),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    transform 0.18s ease;
-}
-
-.photo-grid-more button:hover,
-.photo-grid-more button:focus-visible {
-  border-color: rgba(255, 122, 50, 0.95);
-  outline: none;
-  background:
-    radial-gradient(circle at 30% 16%, rgba(255, 190, 110, 0.34), transparent 42%),
-    linear-gradient(145deg, rgba(42, 24, 16, 0.98), rgba(18, 18, 18, 0.98));
-  transform: translateY(-2px);
-}
-
-.photo-grid-more span {
-  font-size: 0.92rem;
-  font-weight: 900;
+.photo-grid-loader {
+  grid-column: 1 / -1;
+  height: 1px;
+  pointer-events: none;
 }
 
 .empty-gallery {
