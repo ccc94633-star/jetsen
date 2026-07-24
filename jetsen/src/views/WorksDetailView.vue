@@ -15,7 +15,6 @@ const relatedWorks = computed(() => {
 
   return [...allWorks.value.slice(currentIndex + 1), ...allWorks.value.slice(0, currentIndex)].slice(0, 3)
 })
-const activeImage = ref(null)
 const selectedServiceIndex = ref(null)
 const hoveredServiceIndex = ref(null)
 
@@ -228,15 +227,68 @@ const activeScopeDescriptions = computed(() => scopeDescriptions[work.value.slug
 const activeServiceIndex = computed(() => hoveredServiceIndex.value ?? selectedServiceIndex.value ?? 0)
 const hasServices = computed(() => Boolean(work.value.services?.length))
 const hasGallery = computed(() => Boolean(work.value.gallery?.length))
+const galleryImages = computed(() => work.value.gallery ?? [])
+
+const activeImageIndex = ref(null)
+const activeImage = computed(() => {
+  if (activeImageIndex.value === null) return null
+
+  return galleryImages.value[activeImageIndex.value] ?? null
+})
+const touchStart = { x: 0, y: 0 }
+
+const openLightbox = (index) => {
+  activeImageIndex.value = index
+}
 
 const closeLightbox = () => {
-  activeImage.value = null
+  activeImageIndex.value = null
+}
+
+const goToLightboxImage = (direction) => {
+  const imageCount = galleryImages.value.length
+
+  if (activeImageIndex.value === null || imageCount <= 1) return
+
+  activeImageIndex.value = (activeImageIndex.value + direction + imageCount) % imageCount
 }
 
 const handleKeydown = (event) => {
+  if (!activeImage.value) return
+
   if (event.key === 'Escape') {
     closeLightbox()
+    return
   }
+
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault()
+    goToLightboxImage(-1)
+    return
+  }
+
+  if (event.key === 'ArrowRight') {
+    event.preventDefault()
+    goToLightboxImage(1)
+  }
+}
+
+const handleLightboxTouchStart = (event) => {
+  const touch = event.changedTouches[0]
+
+  touchStart.x = touch.clientX
+  touchStart.y = touch.clientY
+}
+
+const handleLightboxTouchEnd = (event) => {
+  const touch = event.changedTouches[0]
+  const deltaX = touch.clientX - touchStart.x
+  const deltaY = touch.clientY - touchStart.y
+  const isHorizontalSwipe = Math.abs(deltaX) > 54 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2
+
+  if (!isHorizontalSwipe) return
+
+  goToLightboxImage(deltaX < 0 ? 1 : -1)
 }
 
 watch(activeImage, (image) => {
@@ -245,6 +297,10 @@ watch(activeImage, (image) => {
 
 watch(relatedWorks, () => {
   nextTick(updateRelatedPagination)
+})
+
+watch(() => work.value.slug, () => {
+  closeLightbox()
 })
 
 onMounted(() => {
@@ -340,7 +396,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             :aria-label="`查看${work.title}作品照片 ${index + 1}`"
-            @click="activeImage = image"
+            @click="openLightbox(index)"
           >
             <img :src="image" :alt="`${work.title}作品照片 ${index + 1}`" loading="lazy" />
           </button>
@@ -413,8 +469,30 @@ onBeforeUnmount(() => {
     <Teleport to="body">
       <div v-if="activeImage" class="lightbox" role="dialog" aria-modal="true" aria-label="作品照片放大檢視">
         <button class="lightbox-backdrop" type="button" aria-label="關閉照片" @click="closeLightbox"></button>
-        <div class="lightbox-panel">
+        <div
+          class="lightbox-panel"
+          @touchstart.passive="handleLightboxTouchStart"
+          @touchend="handleLightboxTouchEnd"
+        >
+          <button
+            v-if="galleryImages.length > 1"
+            class="lightbox-nav lightbox-nav--prev"
+            type="button"
+            aria-label="上一張照片"
+            @click="goToLightboxImage(-1)"
+          >
+            ‹
+          </button>
           <img :src="activeImage" :alt="`${work.title}作品放大照片`" />
+          <button
+            v-if="galleryImages.length > 1"
+            class="lightbox-nav lightbox-nav--next"
+            type="button"
+            aria-label="下一張照片"
+            @click="goToLightboxImage(1)"
+          >
+            ›
+          </button>
           <button class="lightbox-close" type="button" aria-label="關閉照片" @click="closeLightbox">×</button>
         </div>
       </div>
@@ -1015,6 +1093,7 @@ onBeforeUnmount(() => {
   max-width: min(1120px, 94vw);
   max-height: 88vh;
   place-items: center;
+  touch-action: pan-y;
 }
 
 .lightbox-panel img {
@@ -1042,6 +1121,45 @@ onBeforeUnmount(() => {
   cursor: pointer;
   font-size: 1.6rem;
   line-height: 1;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(10, 10, 10, 0.72);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+  cursor: pointer;
+  font-size: 2rem;
+  line-height: 1;
+  transform: translateY(-50%);
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+
+.lightbox-nav:hover,
+.lightbox-nav:focus-visible {
+  border-color: rgba(255, 122, 50, 0.9);
+  background: rgba(20, 20, 20, 0.9);
+  outline: none;
+  transform: translateY(-50%) scale(1.04);
+}
+
+.lightbox-nav--prev {
+  left: -64px;
+}
+
+.lightbox-nav--next {
+  right: -64px;
 }
 
 .related-block {
@@ -1317,6 +1435,38 @@ onBeforeUnmount(() => {
 
   .related-pagination {
     display: flex;
+  }
+
+  .lightbox {
+    padding: 14px;
+  }
+
+  .lightbox-panel,
+  .lightbox-panel img {
+    max-width: 100%;
+    max-height: 86vh;
+    max-height: 86svh;
+  }
+
+  .lightbox-close {
+    top: 10px;
+    right: 10px;
+  }
+
+  .lightbox-nav {
+    width: 38px;
+    height: 38px;
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(10, 10, 10, 0.46);
+    font-size: 1.7rem;
+  }
+
+  .lightbox-nav--prev {
+    left: 10px;
+  }
+
+  .lightbox-nav--next {
+    right: 10px;
   }
 }
 </style>
