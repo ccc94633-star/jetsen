@@ -34,7 +34,8 @@ const setMeta = (selector, attribute, value) => {
 
 export const applySeo = (route) => {
   const seo = getSeoForRoute(route)
-  const baseUrl = new URL(import.meta.env.BASE_URL, window.location.origin)
+  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
+  const baseUrl = new URL(import.meta.env.BASE_URL, siteUrl)
   const url = new URL(route.fullPath.replace(/^\//, ''), baseUrl).href
 
   document.title = seo.title

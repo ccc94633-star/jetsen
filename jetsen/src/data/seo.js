@@ -1,4 +1,4 @@
-export const siteUrl = 'https://jetsen.pages.dev'
+export const siteUrl = 'https://www.jetsen-fabshop.com.tw'
 
 export const defaultSeo = {
   title: '杰森鐵作｜台中採光罩、欄杆扶手、客製鐵件工程',

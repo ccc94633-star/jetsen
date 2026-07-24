@@ -6,7 +6,7 @@ import { hasSupabaseConfig, supabase } from '@/lib/supabase'
 const route = useRoute()
 const router = useRouter()
 
-const email = ref('kxc.sam@gmail.com')
+const email = ref('')
 const password = ref('')
 const newPassword = ref('')
 const confirmPassword = ref('')
@@ -21,7 +21,8 @@ const panelTitle = computed(() => {
   return '後台登入'
 })
 
-const resetRedirectUrl = () => `${window.location.origin}${import.meta.env.BASE_URL}admin/login`
+const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
+const resetRedirectUrl = () => new URL(`${import.meta.env.BASE_URL}admin/login`, siteUrl).href
 
 const setMode = (nextMode) => {
   mode.value = nextMode
