@@ -22,7 +22,7 @@ const panelTitle = computed(() => {
 })
 
 const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin
-const resetRedirectUrl = () => new URL(`${import.meta.env.BASE_URL}admin/login`, siteUrl).href
+const resetRedirectUrl = () => new URL(`${import.meta.env.BASE_URL}admin/login?mode=reset`, siteUrl).href
 
 const setMode = (nextMode) => {
   mode.value = nextMode
@@ -43,19 +43,24 @@ const login = async () => {
   errorMessage.value = ''
   successMessage.value = ''
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email: email.value,
-    password: password.value,
-  })
+  try {
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.value.trim(),
+      password: password.value,
+    })
 
-  isSubmitting.value = false
+    if (error) {
+      errorMessage.value = '登入失敗，請確認 email 和密碼。'
+      return
+    }
 
-  if (error) {
-    errorMessage.value = '登入失敗，請確認 email 和密碼。'
-    return
+    router.push(route.query.redirect || '/admin/works')
+  } catch (error) {
+    console.error('Admin login failed:', error)
+    errorMessage.value = '登入失敗，請稍後再試。'
+  } finally {
+    isSubmitting.value = false
   }
-
-  router.push(route.query.redirect || '/admin/works')
 }
 
 const requestPasswordReset = async () => {
@@ -68,18 +73,23 @@ const requestPasswordReset = async () => {
   errorMessage.value = ''
   successMessage.value = ''
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email.value, {
-    redirectTo: resetRedirectUrl(),
-  })
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.value.trim(), {
+      redirectTo: resetRedirectUrl(),
+    })
 
-  isSubmitting.value = false
+    if (error) {
+      errorMessage.value = `寄送失敗：${error.message}`
+      return
+    }
 
-  if (error) {
-    errorMessage.value = '寄送失敗，請確認 email 是否正確。'
-    return
+    successMessage.value = '已送出更改密碼連結，請到信箱或垃圾郵件匣確認。'
+  } catch (error) {
+    console.error('Password reset email failed:', error)
+    errorMessage.value = '寄送失敗，請稍後再試。'
+  } finally {
+    isSubmitting.value = false
   }
-
-  successMessage.value = '已寄出更改密碼連結，請到信箱收信。'
 }
 
 const updatePassword = async () => {
@@ -102,21 +112,25 @@ const updatePassword = async () => {
   errorMessage.value = ''
   successMessage.value = ''
 
-  const { error } = await supabase.auth.updateUser({
-    password: newPassword.value,
-  })
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword.value,
+    })
 
-  isSubmitting.value = false
+    if (error) {
+      errorMessage.value = `密碼更新失敗：${error.message}`
+      return
+    }
 
-  if (error) {
+    await supabase.auth.signOut()
+    setMode('login')
+    successMessage.value = '密碼已更新，請用新密碼重新登入。'
+  } catch (error) {
+    console.error('Password update failed:', error)
     errorMessage.value = '密碼更新失敗，請重新點擊信件中的連結再試一次。'
-    return
+  } finally {
+    isSubmitting.value = false
   }
-
-  successMessage.value = '密碼已更新，請用新密碼重新登入。'
-  await supabase.auth.signOut()
-  setMode('login')
-  successMessage.value = '密碼已更新，請用新密碼重新登入。'
 }
 
 let authSubscription
